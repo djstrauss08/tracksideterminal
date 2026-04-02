@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handicapping — Wireframe</title>
+  <style>
+    :root {
+      --bg-page: #eaeaea;
+      --bg-panel: #f2f2f2;
+      --bg-elevated: #fafafa;
+      --border: #b8b8b8;
+      --border-subtle: #c8c8c8;
+      --text: #1a1a1a;
+      --text-muted: #5c5c5c;
+      --text-placeholder: #7a7a7a;
+      --bar-fill: #8a8a8a;
+      --bar-bg: #d4d4d4;
+      --accent-line: #6e6e6e;
+      --nav-height: 52px;
+      --race-row-height: 48px;
+      /* Line charts: minimum plot height so multi-series traces stay readable */
+      --speed-chart-plot-min-h: clamp(272px, 42vh, 640px);
+      --speed-chart-plot-min-h-custom: clamp(320px, 52vh, 720px);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-page);
+    }
+
+    /* —— Top navigation —— */
+    .site-header {
+      height: var(--nav-height);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-block {
+      width: 88px;
+      height: 32px;
+      border: 2px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex: 1;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .main-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.75rem;
+      font-size: 13px;
+    }
+
+    .main-nav a.is-active {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: linear-gradient(145deg, #ddd 0%, #bbb 100%);
+      flex-shrink: 0;
+    }
+
+    /* —— Race selector strip —— */
+    .race-toolbar {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem 1rem;
+      flex-wrap: wrap;
+    }
+
+    .race-toolbar-primary {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .race-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .btn-add-view {
+      padding: 0.45rem 1rem;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-add-view:hover {
+      background: #e6e6e6;
+    }
+
+    .btn-add-view:focus {
+      outline: 2px solid #777;
+      outline-offset: 2px;
+    }
+
+    .btn-add-view:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    /* Dashboard: solo (one full-bleed visual), split-h (side by side), split-v (stacked full width) */
+    .handicapping-page {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - var(--nav-height) - var(--race-row-height));
+    }
+
+    .dashboard-root {
+      position: relative;
+      flex: 1;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      min-height: min(85vh, 920px);
+      background-color: #d4d4d4;
+      background-image: radial-gradient(circle at center, #ababab 1.25px, transparent 1.25px);
+      background-size: 14px 14px;
+    }
+
+    .dashboard-root[data-layout="solo"] {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "full";
+    }
+
+    .dashboard-root[data-layout="split-h"] {
+      grid-template-columns: minmax(140px, 0.5fr) 10px minmax(140px, 0.5fr);
+      grid-template-rows: minmax(340px, 1fr);
+      grid-template-areas: "left col-resizer right";
+    }
+
+    .dashboard-root[data-layout="split-v"] {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas:
+        "top"
+        "bottom";
+    }
+
+    /* Two columns on top + vertical resize track, full-width row below (third view).
+       Bottom row shares space ~evenly with top so charts stay legible (avoid tiny 0.48fr strip). */
+    .dashboard-root[data-layout="split-h3"] {
+      grid-template-columns: minmax(140px, 0.5fr) 10px minmax(140px, 0.5fr);
+      grid-template-rows: minmax(200px, 1fr) minmax(300px, 1fr);
+      grid-template-areas:
+        "left col-resizer right"
+        "wide wide wide";
+    }
+
+    .dash-col-resizer {
+      grid-area: col-resizer;
+      z-index: 6;
+      justify-self: center;
+      width: 10px;
+      max-width: 100%;
+      margin: 0 -2px;
+      align-self: stretch;
+      min-height: 2.5rem;
+      border: none;
+      padding: 0;
+      border-radius: 4px;
+      cursor: col-resize;
+      touch-action: none;
+      background: linear-gradient(90deg, #9a9a9a 0 22%, #d6d6d6 22% 78%, #9a9a9a 78% 100%);
+      box-shadow:
+        inset 0 0 0 1px rgb(0 0 0 / 0.12),
+        0 0 0 1px rgb(255 255 255 / 0.35);
+    }
+
+    .dash-col-resizer:hover {
+      background: linear-gradient(90deg, #7a7a7a 0 22%, #c8c8c8 22% 78%, #7a7a7a 78% 100%);
+    }
+
+    .dashboard-root.is-resizing-cols .dash-col-resizer {
+      background: #6e6e6e;
+      cursor: col-resize;
+    }
+
+    .dashboard-root.is-resizing-cols,
+    .dashboard-root.is-resizing-cols * {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .dash-col-resizer:focus {
+      outline: 2px solid #444;
+      outline-offset: 1px;
+    }
+
+    .dash-col-resizer:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    .snap-hints {
+      position: absolute;
+      inset: 10px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .snap-hint {
+      position: absolute;
+      box-sizing: border-box;
+      border: 2px dashed transparent;
+      border-radius: 6px;
+      transition: border-color 0.12s ease, background 0.12s ease;
+      display: none;
+    }
+
+    /* Solo: one drop zone (shown only while dragging via .is-target) */
+    .dashboard-root[data-layout="solo"] .snap-hint[data-slot="full"] {
+      inset: 0;
+    }
+
+    /* Side by side: left/right panes + bottom bands to snap into stacked layout */
+    .dashboard-root[data-layout="split-h"] .snap-hint[data-slot="left"] {
+      top: 0;
+      left: 0;
+      width: calc(50% - 5px);
+      height: calc(62% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h"] .snap-hint[data-slot="right"] {
+      top: 0;
+      right: 0;
+      width: calc(50% - 5px);
+      height: calc(62% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h"] .snap-hint[data-slot="top"] {
+      top: calc(62% + 2px);
+      left: 0;
+      right: 0;
+      height: calc(16% - 4px);
+    }
+
+    .dashboard-root[data-layout="split-h"] .snap-hint[data-slot="bottom"] {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(22% - 4px);
+    }
+
+    /* Stacked: top/bottom + right strips to return to side by side */
+    .dashboard-root[data-layout="split-v"] .snap-hint[data-slot="top"] {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(50% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-v"] .snap-hint[data-slot="bottom"] {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(50% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-v"] .snap-hint[data-slot="left"] {
+      top: 0;
+      bottom: 0;
+      left: calc(62% + 2px);
+      width: calc(16% - 4px);
+    }
+
+    .dashboard-root[data-layout="split-v"] .snap-hint[data-slot="right"] {
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: calc(22% - 4px);
+    }
+
+    .dashboard-root[data-layout="split-h3"] .snap-hint[data-slot="left"] {
+      top: 0;
+      left: 0;
+      width: calc(50% - 5px);
+      height: calc(56% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h3"] .snap-hint[data-slot="right"] {
+      top: 0;
+      right: 0;
+      width: calc(50% - 5px);
+      height: calc(56% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h3"] .snap-hint[data-slot="wide"] {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(44% - 5px);
+    }
+
+    .dashboard-root.is-dragging-widget .snap-hint.is-target {
+      display: block;
+      border-color: #292929;
+      background: rgb(255 255 255 / 0.14);
+    }
+
+    .dash-widget {
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 3px 16px rgb(0 0 0 / 0.1);
+    }
+
+    .dash-widget.is-dragging {
+      z-index: 40;
+      opacity: 0.97;
+      box-shadow: 0 12px 36px rgb(0 0 0 / 0.24);
+    }
+
+    /* Full-width lower row: enough height and scroll for controls + chart; avoid clipping */
+    .dash-widget[data-slot="wide"] {
+      min-height: 0;
+    }
+
+    .dash-widget[data-slot="wide"] .dash-widget-body {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .dash-widget[data-slot="wide"] .chart-module.panel {
+      flex: 1 1 auto;
+      min-height: max(280px, 30vh);
+    }
+
+    .dash-widget[data-slot="wide"] .chart-placeholder {
+      flex: 1 1 auto;
+      min-height: 260px;
+    }
+
+    .dash-widget[data-slot="wide"] .speed-chart-wrap {
+      flex: 1 1 auto;
+      min-height: min(360px, 45vh);
+    }
+
+    .dash-widget[data-slot="wide"] .speed-chart-plot {
+      flex: 1 1 auto;
+      min-height: var(--speed-chart-plot-min-h);
+    }
+
+    .dash-widget[data-slot="wide"] .speed-chart-wrap .axis-caption-x {
+      padding: 0.25rem 0.15rem 0.45rem;
+      margin-bottom: 0.15rem;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .dash-widget-header {
+      padding: 0.45rem 0.6rem 0.45rem 0.5rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .dash-widget-header:active {
+      cursor: grabbing;
+    }
+
+    .dash-widget-header .dash-widget-close {
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .dash-widget-grip {
+      width: 14px;
+      height: 20px;
+      flex-shrink: 0;
+      opacity: 0.55;
+      background: repeating-linear-gradient(
+        180deg,
+        #666 0 2px,
+        transparent 2px 5px
+      );
+    }
+
+    .dash-widget-title {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .dash-widget-close {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dash-widget-close:hover {
+      background: #d8d8d8;
+      color: var(--text);
+      border-color: var(--border-subtle);
+    }
+
+    .dash-widget-close:focus {
+      outline: 2px solid #666;
+      outline-offset: 1px;
+    }
+
+    .dash-widget-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .dash-widget-body > .panel {
+      border: none;
+      background: transparent;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .dash-widget-body > .chart-module.panel {
+      border: none;
+      background: transparent;
+    }
+
+    .added-view-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.75rem 1.5rem;
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px dashed var(--border-subtle);
+      background: var(--bg-elevated);
+    }
+
+    .added-view-canvas {
+      min-height: min(520px, 70vh);
+      background: var(--bg-elevated);
+    }
+
+    .added-view-placeholder {
+      box-sizing: border-box;
+      min-height: 240px;
+      margin: 0.65rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1rem;
+      border: 2px dashed var(--border);
+      border-radius: 3px;
+      color: var(--text-placeholder);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .added-view-factors-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 0 0.45rem;
+      line-height: 1.35;
+    }
+
+    .dash-widget--custom .factors-block {
+      margin-top: 0;
+      padding: 0.65rem 0.85rem 0.75rem;
+      border-top: none;
+    }
+
+    .race-toolbar label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    select.wire-select {
+      min-width: 220px;
+      padding: 0.45rem 2rem 0.45rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 960px) {
+      .dashboard-root[data-layout="split-h"] {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: minmax(220px, 1fr) minmax(220px, 1fr);
+        grid-template-areas:
+          "left"
+          "right";
+      }
+
+      .dashboard-root[data-layout="split-h3"] {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: minmax(200px, 1fr) minmax(200px, 1fr) minmax(260px, auto);
+        grid-template-areas:
+          "left"
+          "right"
+          "wide";
+      }
+
+      .dash-col-resizer {
+        display: none !important;
+      }
+    }
+
+    .panel {
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+    }
+
+    .panel:last-of-type {
+      border-right: none;
+    }
+
+    .panel-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-elevated);
+    }
+
+    .chart-module > .panel-header {
+      flex-shrink: 0;
+      padding: 0.65rem 0.85rem;
+    }
+
+    .panel-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .panel-subtitle {
+      margin: 0.35rem 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .control-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 160px;
+    }
+
+    .control-cluster label.inline-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-placeholder);
+    }
+
+    select.wire-select--sm {
+      min-width: 140px;
+      font-size: 12px;
+    }
+
+    /* Conditional factors */
+    .factors-block {
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .factors-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-placeholder);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .factor-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .factor-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .factor-chip input {
+      accent-color: #555;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Left: horse list + bars */
+    .bar-chart-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 0.5rem 0;
+    }
+
+    .average-label {
+      padding: 0 1rem 0.35rem;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .horse-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.75rem 0.75rem;
+      max-height: min(70vh, 640px);
+    }
+
+    .horse-row {
+      display: grid;
+      /* Shared label column width so every bar track begins at the same x */
+      grid-template-columns: min(13.5rem, 50%) minmax(0, 1fr);
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #dcdcdc;
+    }
+
+    .horse-row:last-child {
+      border-bottom: none;
+    }
+
+    .horse-row:has(.horse-meta input:not(:checked)) {
+      opacity: 0.42;
+    }
+
+    .horse-row:has(.horse-meta input:not(:checked)) .bar-fill {
+      background: #b0b0b0;
+    }
+
+    .horse-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 0;
+      width: 100%;
+      max-width: none;
+    }
+
+    .horse-meta input[type="checkbox"] {
+      accent-color: #444;
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .horse-label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      min-width: 0;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .horse-num {
+      font-variant-numeric: tabular-nums;
+      min-width: 1.65rem;
+      text-align: right;
+      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .horse-name {
+      min-width: 0;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bar-track {
+      height: 18px;
+      background: var(--bar-bg);
+      border-radius: 2px;
+      overflow: hidden;
+      border: 1px solid #c0c0c0;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--bar-fill);
+      border-radius: 1px;
+    }
+
+    .scroll-hint {
+      text-align: center;
+      padding: 0.35rem;
+      font-size: 10px;
+      color: var(--text-placeholder);
+      letter-spacing: 0.02em;
+    }
+
+    .chart-module {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .chart-placeholder {
+      flex: 1;
+      margin: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      position: relative;
+      min-height: 0;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #widget-speed .chart-placeholder {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .speed-viz-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .speed-viz-alt {
+      flex: 1;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .speed-viz-alt[hidden] {
+      display: none !important;
+    }
+
+    .speed-viz-panel[hidden] {
+      display: none !important;
+    }
+
+    .mock-viz-banner {
+      flex-shrink: 0;
+      margin: 0.35rem 0.75rem 0.15rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-muted);
+      background: rgb(255 255 255 / 0.55);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    .mock-viz-banner strong {
+      color: var(--text);
+    }
+
+    .mock-wire-table-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 0.35rem 0.65rem 0.65rem;
+    }
+
+    .mock-wire-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    .mock-wire-table caption {
+      caption-side: top;
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-placeholder);
+      padding: 0.25rem 0 0.4rem;
+    }
+
+    .mock-wire-table th,
+    .mock-wire-table td {
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.45rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .mock-wire-table th:first-child,
+    .mock-wire-table td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--bg-panel);
+      z-index: 1;
+      font-weight: 600;
+    }
+
+    .mock-wire-table tbody tr:nth-child(even) td {
+      background: rgb(0 0 0 / 0.03);
+    }
+
+
+    .added-view-visual {
+      flex: 1;
+      min-height: min(480px, 65vh);
+      overflow: auto;
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dash-widget--custom .added-view-canvas {
+      flex: 1;
+      min-height: min(520px, 72vh);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Extra vertical room for line charts inside user-added views */
+    .dash-widget--custom .added-view-visual .speed-chart-wrap {
+      flex: 1 1 auto;
+      min-height: min(400px, 55vh);
+    }
+
+    .dash-widget--custom .added-view-visual .speed-chart-plot {
+      min-height: var(--speed-chart-plot-min-h-custom);
+    }
+
+    /* SVG wireframe “charts” */
+    .wire-chart-svg {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: block;
+    }
+
+    .wire-legend {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--text-placeholder);
+    }
+
+    .wire-legend span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wire-legend i {
+      width: 18px;
+      height: 2px;
+      background: var(--accent-line);
+      opacity: 0.85;
+    }
+
+    .wire-legend span:nth-child(2) i { opacity: 0.65; width: 14px; }
+    .wire-legend span:nth-child(3) i { opacity: 0.45; width: 22px; }
+
+    /* Speed chart: horses popover (CSS visibility for series unchanged) */
+    .horse-picker-shell {
+      position: relative;
+      z-index: 20;
+      flex-shrink: 0;
+      padding: 0.2rem 0.3rem 0;
+    }
+
+    .horse-picker-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 0.4rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-panel);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .horse-picker-trigger:hover {
+      background: #e8e8e8;
+    }
+
+    .horse-picker-trigger:focus {
+      outline: 2px solid #888;
+      outline-offset: 2px;
+    }
+
+    .horse-picker-trigger-title {
+      font-weight: 700;
+    }
+
+    .horse-picker-trigger-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .horse-picker-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgb(0 0 0 / 0.06);
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: default;
+    }
+
+    .horse-picker-panel {
+      position: absolute;
+      left: 0.75rem;
+      right: 0.75rem;
+      top: calc(100% + 6px);
+      z-index: 101;
+      max-height: min(65vh, 340px);
+      display: flex;
+      flex-direction: column;
+      padding: 0.65rem 0.75rem 0.5rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 10px 28px rgb(0 0 0 / 0.14);
+    }
+
+    .horse-picker-panel[hidden] {
+      display: none;
+    }
+
+    .horse-picker-backdrop[hidden] {
+      display: none;
+    }
+
+    .horse-picker-footer {
+      flex-shrink: 0;
+      padding-top: 0.5rem;
+      margin-top: 0.35rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .horse-picker-done {
+      padding: 0.4rem 1.1rem;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #2a2a2a;
+      color: #f5f5f5;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .horse-picker-done:hover {
+      background: #3d3d3d;
+    }
+
+    .chart-horses-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 0 0.45rem;
+      line-height: 1.35;
+    }
+
+    .chart-horse-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.25rem 1rem;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0.15rem 0.25rem 0.35rem 0;
+    }
+
+    @media (max-width: 1100px) {
+      .chart-horse-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-line-pick {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.35rem;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      min-width: 0;
+    }
+
+    .chart-line-pick input {
+      accent-color: #444;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .chart-line-swatch {
+      width: 22px;
+      height: 3px;
+      flex-shrink: 0;
+      margin-top: 5px;
+      border-radius: 1px;
+      background: #666;
+    }
+
+    .chart-line-pick.is-empty .chart-line-swatch {
+      background: repeating-linear-gradient(
+        90deg,
+        #999 0 4px,
+        transparent 4px 7px
+      );
+      height: 2px;
+      margin-top: 6px;
+      opacity: 0.65;
+    }
+
+    .chart-line-text {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      line-height: 1.25;
+    }
+
+    .chart-line-name {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chart-line-meta {
+      font-size: 10px;
+      color: var(--text-placeholder);
+    }
+
+    .speed-chart-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .speed-chart-plot {
+      position: relative;
+      flex: 1;
+      min-height: var(--speed-chart-plot-min-h);
+      overflow: hidden;
+    }
+
+    .speed-chart-plot .wire-chart-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .speed-chart-wrap .axis-caption-x {
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-placeholder);
+      margin: 0.1rem 0.2rem 0.2rem;
+      padding: 0 0.15rem;
+      letter-spacing: 0.04em;
+      line-height: 1.25;
+    }
+
+  </style>
+</head>
+<body>
+  <header class="site-header" aria-label="Primary">
+    <div class="logo-block" aria-hidden="true">Logo</div>
+    <nav class="main-nav" aria-label="Main menu">
+      <a href="#" class="is-active">Lorem ipsum dolor</a>
+      <a href="#">Sit amet consectetur</a>
+      <a href="#">Adipiscing elit sed</a>
+      <a href="#">Eiusmod tempor</a>
+    </nav>
+    <div class="user-avatar" role="img" aria-label="Account"></div>
+  </header>
+
+  <div class="race-toolbar">
+    <div class="race-toolbar-primary">
+      <label for="race-select">Race number</label>
+      <select id="race-select" class="wire-select" aria-label="Race selection">
+        <option>Race 1 — Lorem ipsum stakes</option>
+        <option>Race 2 — Dolor sit amet</option>
+        <option>Race 3 — Consectetur adipiscing</option>
+        <option>Race 4 — Elit sed do</option>
+      </select>
+    </div>
+    <div class="race-toolbar-actions">
+      <button type="button" class="btn-add-view" id="add-view-btn" aria-label="Add another analysis view below">
+        Add view
+      </button>
+    </div>
+  </div>
+
+  <div class="handicapping-page" id="handicapping-page">
+    <div class="dashboard-root" id="dashboard-root" data-layout="split-h" data-col-ratio="0.5">
+      <div class="snap-hints" id="snap-hints" aria-hidden="true">
+        <div class="snap-hint" data-slot="full"></div>
+        <div class="snap-hint" data-slot="left"></div>
+        <div class="snap-hint" data-slot="right"></div>
+        <div class="snap-hint" data-slot="top"></div>
+        <div class="snap-hint" data-slot="bottom"></div>
+        <div class="snap-hint" data-slot="wide"></div>
+      </div>
+      <button type="button" class="dash-col-resizer" id="dash-col-resizer" aria-label="Drag to resize columns" title="Drag to widen or narrow the panels"></button>
+      <div class="dash-widget" id="widget-bars" data-slot="left" style="grid-area: left">
+        <header class="dash-widget-header">
+          <span class="dash-widget-grip" role="button" tabindex="0" aria-label="Drag to rearrange panels" title="Drag — swap columns; from two-up drag down to stack; when stacked drag right edge to split; with three views drag to move between full-width lower row and columns"></span>
+          <h2 class="dash-widget-title" id="compare-heading">Race comparison</h2>
+          <button type="button" class="dash-widget-close" aria-label="Close race comparison panel">&times;</button>
+        </header>
+        <div class="dash-widget-body">
+          <section class="panel bar-panel" aria-labelledby="compare-heading">
+            <div class="panel-header">
+              <div class="panel-title-row">
+                <div>
+                  <p class="panel-subtitle">Toggle horses to include or exclude from the chart.</p>
+                </div>
+                <div class="control-cluster">
+                  <label class="inline-label" for="metric-bars">Metric</label>
+                  <select id="metric-bars" class="wire-select wire-select--sm" aria-label="Bar chart metric">
+                    <option selected>Speed figure</option>
+                    <option>Early pace</option>
+                    <option>Class rating</option>
+                    <option>Finish time index</option>
+                  </select>
+                </div>
+              </div>
+              <div class="factors-block">
+                <span class="factors-label">Conditional factors</span>
+                <div class="factor-toggles">
+                  <label class="factor-chip"><input type="checkbox" checked /> Lorem surface</label>
+                  <label class="factor-chip"><input type="checkbox" /> Dolor distance</label>
+                  <label class="factor-chip"><input type="checkbox" checked /> Sit class level</label>
+                  <label class="factor-chip"><input type="checkbox" /> Amet pace</label>
+                  <label class="factor-chip"><input type="checkbox" /> Consectetur field</label>
+                </div>
+              </div>
+            </div>
+      <div class="bar-chart-body" id="bar-chart-body">
+        <div class="average-label" id="bar-average-label">Field average (speed figure) — mock scale 0–100</div>
+        <div class="horse-scroll" role="list">
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h1" checked aria-label="Include 1 Midnight Courier in charts" />
+              <label class="horse-label" for="h1"><span class="horse-num">1</span><span class="horse-name">Midnight Courier</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:59%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h2" checked aria-label="Include 2 Silverpine Express in charts" />
+              <label class="horse-label" for="h2"><span class="horse-num">2</span><span class="horse-name">Silverpine Express</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:76%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h3" checked aria-label="Include 3 Harbor Lights in charts" />
+              <label class="horse-label" for="h3"><span class="horse-num">3</span><span class="horse-name">Harbor Lights</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:48%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h4" checked aria-label="Include 4 True North Pride in charts" />
+              <label class="horse-label" for="h4"><span class="horse-num">4</span><span class="horse-name">True North Pride</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:87%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h5" checked aria-label="Include 5 Velvet Thunder in charts" />
+              <label class="horse-label" for="h5"><span class="horse-num">5</span><span class="horse-name">Velvet Thunder</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:41%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h6" checked aria-label="Include 6 Canterbury Tale in charts" />
+              <label class="horse-label" for="h6"><span class="horse-num">6</span><span class="horse-name">Canterbury Tale</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:93%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h7" checked aria-label="Include 7 Rasputin's Fancy in charts" />
+              <label class="horse-label" for="h7"><span class="horse-num">7</span><span class="horse-name">Rasputin&rsquo;s Fancy</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:55%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h8" checked aria-label="Include 8 Oaklawn Oracle in charts" />
+              <label class="horse-label" for="h8"><span class="horse-num">8</span><span class="horse-name">Oaklawn Oracle</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:67%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h9" checked aria-label="Include 9 Paper Lantern in charts" />
+              <label class="horse-label" for="h9"><span class="horse-num">9</span><span class="horse-name">Paper Lantern</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:38%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h10" checked aria-label="Include 10 Crimson Delta in charts" />
+              <label class="horse-label" for="h10"><span class="horse-num">10</span><span class="horse-name">Crimson Delta</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:82%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h11" checked aria-label="Include 11 Widow's Morn in charts" />
+              <label class="horse-label" for="h11"><span class="horse-num">11</span><span class="horse-name">Widow&rsquo;s Morn</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:44%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h12" checked aria-label="Include 12 Beacon Hill in charts" />
+              <label class="horse-label" for="h12"><span class="horse-num">12</span><span class="horse-name">Beacon Hill</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:71%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h13" aria-label="Include 13 Summer Solstice in charts" />
+              <label class="horse-label" for="h13"><span class="horse-num">13</span><span class="horse-name">Summer Solstice</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:52%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h14" aria-label="Include 14 Ironwood Prince in charts" />
+              <label class="horse-label" for="h14"><span class="horse-num">14</span><span class="horse-name">Ironwood Prince</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:64%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h15" aria-label="Include 15 Gatsby's Ghost in charts" />
+              <label class="horse-label" for="h15"><span class="horse-num">15</span><span class="horse-name">Gatsby&rsquo;s Ghost</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:89%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h16" aria-label="Include 16 Prairie Orchard in charts" />
+              <label class="horse-label" for="h16"><span class="horse-num">16</span><span class="horse-name">Prairie Orchard</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:46%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h17" aria-label="Include 17 Blue Heron Flyer in charts" />
+              <label class="horse-label" for="h17"><span class="horse-num">17</span><span class="horse-name">Blue Heron Flyer</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:73%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h18" aria-label="Include 18 Noble Contradiction in charts" />
+              <label class="horse-label" for="h18"><span class="horse-num">18</span><span class="horse-name">Noble Contradiction</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:58%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h19" aria-label="Include 19 Rocket to Riches in charts" />
+              <label class="horse-label" for="h19"><span class="horse-num">19</span><span class="horse-name">Rocket to Riches</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:91%"></div></div>
+          </div>
+          <div class="horse-row" role="listitem">
+            <div class="horse-meta">
+              <input type="checkbox" name="horse" id="h20" aria-label="Include 20 Lamplighter Lane in charts" />
+              <label class="horse-label" for="h20"><span class="horse-num">20</span><span class="horse-name">Lamplighter Lane</span></label>
+            </div>
+            <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:42%"></div></div>
+          </div>
+        </div>
+        <p class="scroll-hint" id="bar-scroll-hint">Up to 20 entries — scroll when the field is large</p>
+      </div>
+    </section>
+        </div>
+      </div>
+
+      <div class="dash-widget" id="widget-speed" data-slot="right" style="grid-area: right">
+        <header class="dash-widget-header">
+          <span class="dash-widget-grip" role="button" tabindex="0" aria-label="Drag to rearrange panels" title="Drag — swap columns; from two-up drag down to stack; when stacked drag right edge to split; with three views drag to move between full-width lower row and columns"></span>
+          <h2 class="dash-widget-title" id="speed-heading">Speed by past race</h2>
+          <button type="button" class="dash-widget-close" aria-label="Close speed chart panel">&times;</button>
+        </header>
+        <div class="dash-widget-body">
+          <section class="chart-module panel" aria-labelledby="speed-heading">
+            <div class="panel-header">
+              <div class="panel-title-row">
+                <div>
+                  <p class="panel-subtitle" id="speed-panel-subtitle">Each point is one historical race, left to right (Race 1 = earliest shown).</p>
+                </div>
+                <div class="control-cluster">
+                  <label class="inline-label" for="metric-speed">Metric</label>
+                  <select id="metric-speed" class="wire-select wire-select--sm" aria-label="Chart metric">
+                    <option selected>Speed figure</option>
+                    <option>Early pace</option>
+                    <option>Class rating</option>
+                    <option>Finish time index</option>
+                  </select>
+                </div>
+                <div class="control-cluster">
+                  <label class="inline-label" for="viz-speed">View type</label>
+                  <select id="viz-speed" class="wire-select wire-select--sm" aria-label="Speed panel view type">
+                    <option selected>Line chart</option>
+                    <option>Bar chart</option>
+                    <option>Table</option>
+                  </select>
+                </div>
+              </div>
+              <div class="factors-block">
+                <span class="factors-label">Conditional factors</span>
+                <div class="factor-toggles">
+                  <label class="factor-chip"><input type="checkbox" checked /> Nulla pariatur</label>
+                  <label class="factor-chip"><input type="checkbox" /> Excepteur sint</label>
+                  <label class="factor-chip"><input type="checkbox" /> Occaecat cupidatat</label>
+                  <label class="factor-chip"><input type="checkbox" checked /> Non proident</label>
+                </div>
+              </div>
+            </div>
+        <div class="chart-placeholder" aria-label="Speed by race line chart">
+          <div class="horse-picker-shell">
+            <button type="button" class="horse-picker-trigger" id="horse-picker-trigger" aria-expanded="false" aria-controls="horse-picker-panel" aria-haspopup="dialog">
+              <span class="horse-picker-trigger-title">Horses on chart</span>
+              <span class="horse-picker-trigger-meta" id="horse-picker-summary">9 lines visible · tap to add or remove</span>
+            </button>
+            <button type="button" class="horse-picker-backdrop" id="horse-picker-backdrop" hidden aria-label="Close horse picker"></button>
+            <div class="horse-picker-panel" id="horse-picker-panel" role="dialog" aria-modal="true" aria-labelledby="horse-picker-heading" hidden>
+              <span class="factors-label" id="horse-picker-heading">Select horses</span>
+              <p class="chart-horses-hint" id="chart-horses-hint">Uncheck to hide a line. (Horse 4 has no prior races in this sample.)</p>
+              <div class="chart-horse-grid" role="group" aria-label="Horses on speed chart">
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h1" checked /><span class="chart-line-swatch" style="background:#1f1f1f"></span><span class="chart-line-text"><span class="chart-line-name">1 · Midnight Courier</span><span class="chart-line-meta">10 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h2" checked /><span class="chart-line-swatch" style="background:#5a5a5a"></span><span class="chart-line-text"><span class="chart-line-name">2 · Silverpine Express</span><span class="chart-line-meta">7 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h3" checked /><span class="chart-line-swatch" style="background:#6e6e6e"></span><span class="chart-line-text"><span class="chart-line-name">3 · Harbor Lights</span><span class="chart-line-meta">3 races plotted</span></span></label>
+                <label class="chart-line-pick is-empty"><input type="checkbox" id="chart-line-h4" checked /><span class="chart-line-swatch"></span><span class="chart-line-text"><span class="chart-line-name">4 · True North Pride</span><span class="chart-line-meta">0 races — no line</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h5" checked /><span class="chart-line-swatch" style="background:#4a4a4a"></span><span class="chart-line-text"><span class="chart-line-name">5 · Velvet Thunder</span><span class="chart-line-meta">10 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h6" checked /><span class="chart-line-swatch" style="background:#7d7d7d"></span><span class="chart-line-text"><span class="chart-line-name">6 · Canterbury Tale</span><span class="chart-line-meta">5 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h7" checked /><span class="chart-line-swatch" style="background:#3d3d3d"></span><span class="chart-line-text"><span class="chart-line-name">7 · Rasputin&rsquo;s Fancy</span><span class="chart-line-meta">8 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h8" checked /><span class="chart-line-swatch" style="background:#686868"></span><span class="chart-line-text"><span class="chart-line-name">8 · Oaklawn Oracle</span><span class="chart-line-meta">6 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h9" checked /><span class="chart-line-swatch" style="background:#8a8a8a"></span><span class="chart-line-text"><span class="chart-line-name">9 · Paper Lantern</span><span class="chart-line-meta">4 races plotted</span></span></label>
+                <label class="chart-line-pick"><input type="checkbox" id="chart-line-h10" checked /><span class="chart-line-swatch" style="background:#2c2c2c"></span><span class="chart-line-text"><span class="chart-line-name">10 · Crimson Delta</span><span class="chart-line-meta">10 races plotted</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h11" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">11 · Widow&rsquo;s Morn</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h12" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">12 · Beacon Hill</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h13" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">13 · Summer Solstice</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h14" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">14 · Ironwood Prince</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h15" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">15 · Gatsby&rsquo;s Ghost</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h16" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">16 · Prairie Orchard</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h17" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">17 · Blue Heron Flyer</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h18" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">18 · Noble Contradiction</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h19" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">19 · Rocket to Riches</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+                <label class="chart-line-pick chart-line-pick--muted"><input type="checkbox" id="chart-line-h20" /><span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span><span class="chart-line-text"><span class="chart-line-name">20 · Lamplighter Lane</span><span class="chart-line-meta">Wireframe — no sample line</span></span></label>
+              </div>
+              <div class="horse-picker-footer">
+                <button type="button" class="horse-picker-done" id="horse-picker-done">Done</button>
+              </div>
+            </div>
+          </div>
+          <div id="speed-viz-line" class="speed-viz-panel">
+            <div class="speed-chart-wrap">
+              <div class="speed-chart-plot" id="speed-chart-container"></div>
+              <p class="axis-caption-x" id="speed-axis-x-caption">Horizontal axis = ten most recent races. Higher on chart = stronger mock speed figure.</p>
+            </div>
+          </div>
+          <div id="speed-viz-alt" class="speed-viz-alt" hidden></div>
+        </div>
+      </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  /* ── Dynamic Line Chart Engine ─────────────────────────────────────────── */
+  (function () {
+    "use strict";
+
+    var NS = "http://www.w3.org/2000/svg";
+
+    /* Distinct line colors so overlapping traces stay legible (wireframe-safe saturation) */
+    var HR_LINE_PALETTE = [
+      "#1e40af", "#b45309", "#047857", "#7c3aed", "#be123c",
+      "#0f766e", "#a16207", "#4f46e5", "#15803d", "#c2410c",
+    ];
+
+    /* Backed-by-data series (swap values here when real data arrives) */
+    /* Race 1: twenty-horse field on bars; line chart samples nine (no #4), plus muted 11–20 */
+    var CHART_SERIES_RACE1 = [
+      { num: 1,  name: "Midnight Courier",      color: HR_LINE_PALETTE[0], weight: 2,    values: [77,83,80,89,86,91,82,93,88,95] },
+      { num: 2,  name: "Silverpine Express",    color: HR_LINE_PALETTE[1], weight: 1.85, values: [75,85,79,87,82,90,84,null,null,null] },
+      { num: 3,  name: "Harbor Lights",         color: HR_LINE_PALETTE[2], weight: 1.75, values: [78,83,87,null,null,null,null,null,null,null] },
+      { num: 4,  name: "True North Pride",      color: HR_LINE_PALETTE[3], weight: 1.8,  values: [null,null,null,null,null,null,null,null,null,null] },
+      { num: 5,  name: "Velvet Thunder",        color: HR_LINE_PALETTE[4], weight: 1.9,  values: [74,76,78,82,84,86,83,88,91,94] },
+      { num: 6,  name: "Canterbury Tale",       color: HR_LINE_PALETTE[5], weight: 1.65, values: [79,81,87,85,89,null,null,null,null,null] },
+      { num: 7,  name: "Rasputin\u2019s Fancy", color: HR_LINE_PALETTE[6], weight: 1.75, values: [81,84,78,86,83,80,89,87,null,null] },
+      { num: 8,  name: "Oaklawn Oracle",        color: HR_LINE_PALETTE[7], weight: 1.65, values: [82,79,88,85,81,91,null,null,null,null] },
+      { num: 9,  name: "Paper Lantern",         color: HR_LINE_PALETTE[8], weight: 1.55, values: [80,86,83,90,null,null,null,null,null,null] },
+      { num: 10, name: "Crimson Delta",         color: HR_LINE_PALETTE[9], weight: 2,    values: [76,75,81,79,83,85,82,80,78,77] },
+    ];
+
+    /* Race 2: nine-horse field — sequential post 1–9, mock history for each */
+    var CHART_SERIES_RACE2 = [
+      { num: 1, name: "Midnight Courier",      color: HR_LINE_PALETTE[0], weight: 2,    values: [78,82,85,88,90,87,91,89,93,96] },
+      { num: 2, name: "Silverpine Express",    color: HR_LINE_PALETTE[1], weight: 1.85, values: [74,84,80,86,83,null,null,null,null,null] },
+      { num: 3, name: "Harbor Lights",         color: HR_LINE_PALETTE[2], weight: 1.75, values: [79,81,84,88,92,90,null,null,null,null] },
+      { num: 4, name: "True North Pride",      color: HR_LINE_PALETTE[3], weight: 1.8,  values: [73,77,76,80,82,85,84,88,null,null] },
+      { num: 5, name: "Velvet Thunder",        color: HR_LINE_PALETTE[4], weight: 1.9,  values: [76,78,81,85,87,89,86,90,92,95] },
+      { num: 6, name: "Canterbury Tale",       color: HR_LINE_PALETTE[5], weight: 1.65, values: [80,83,82,86,88,null,null,null,null,null] },
+      { num: 7, name: "Rasputin\u2019s Fancy", color: HR_LINE_PALETTE[6], weight: 1.75, values: [82,85,79,87,84,81,90,88,91,null] },
+      { num: 8, name: "Oaklawn Oracle",        color: HR_LINE_PALETTE[7], weight: 1.65, values: [81,80,86,84,82,92,89,null,null,null] },
+      { num: 9, name: "Paper Lantern",         color: HR_LINE_PALETTE[8], weight: 1.55, values: [77,88,85,91,87,null,null,null,null,null] },
+    ];
+
+    var CHART_SERIES = CHART_SERIES_RACE1;
+
+    var X_LABELS = ["Race 1","Race 2","Race 3","Race 4","Race 5",
+                    "Race 6","Race 7","Race 8","Race 9","Race 10"];
+
+    function svgEl(tag) { return document.createElementNS(NS, tag); }
+
+    function setA(node, map) {
+      Object.keys(map).forEach(function (k) { node.setAttribute(k, map[k]); });
+      return node;
+    }
+
+    function mkLine(x1, y1, x2, y2, ex) {
+      return setA(svgEl("line"), Object.assign({ x1: x1, y1: y1, x2: x2, y2: y2 }, ex || {}));
+    }
+
+    function mkText(str, x, y, ex) {
+      var t = setA(svgEl("text"), Object.assign({ x: x, y: y }, ex || {}));
+      t.textContent = str;
+      return t;
+    }
+
+    function HrLineChart(container, options) {
+      options = options || {};
+
+      var _series = (options.series || CHART_SERIES).map(function (s) {
+        return { num: s.num, name: s.name, color: s.color, weight: s.weight,
+                 values: s.values.slice() };
+      });
+      var _xLabels = options.xLabels || X_LABELS;
+      var _metric  = options.metric  || "Speed figure";
+      var _visible = {};
+      var _hover   = null;
+
+      _series.forEach(function (s) { _visible[s.num] = true; });
+
+      var _svg = setA(svgEl("svg"), { "aria-hidden": "true" });
+      _svg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;" +
+                           "display:block;cursor:crosshair;overflow:visible";
+      container.style.position = "relative";
+      container.style.overflow = "hidden";
+      container.appendChild(_svg);
+
+      var M = { top: 16, right: 16, bottom: 38, left: 50 };
+
+      function render() {
+        var W = container.clientWidth;
+        var H = container.clientHeight;
+        if (!W || !H || W < 30 || H < 30) return;
+
+        _svg.setAttribute("width",  W);
+        _svg.setAttribute("height", H);
+        while (_svg.firstChild) _svg.removeChild(_svg.firstChild);
+
+        var pX = M.left,  pY = M.top;
+        var pW = Math.max(10, W - M.left - M.right);
+        var pH = Math.max(10, H - M.top  - M.bottom);
+
+        /* Value range across visible series */
+        var allV = [];
+        _series.forEach(function (s) {
+          if (!_visible[s.num]) return;
+          s.values.forEach(function (v) { if (v != null) allV.push(v); });
+        });
+        if (!allV.length) allV = [60, 100];
+        var vMin = Math.min.apply(null, allV);
+        var vMax = Math.max.apply(null, allV);
+        var pad  = Math.max((vMax - vMin) * 0.14, 3);
+        var yLo  = vMin - pad;
+        var yHi  = vMax + pad;
+
+        var n = _xLabels.length;
+        function xAt(i) { return pX + (i / (n - 1)) * pW; }
+        function yAt(v) { return pY + pH - ((v - yLo) / (yHi - yLo)) * pH; }
+
+        /* Horizontal grid lines */
+        var gH = setA(svgEl("g"), { stroke: "#cfcfcf", "stroke-width": "0.65" });
+        for (var gi = 0; gi <= 3; gi++) {
+          var gy = pY + (gi / 3) * pH;
+          gH.appendChild(mkLine(pX, gy, pX + pW, gy));
+        }
+        _svg.appendChild(gH);
+
+        /* Vertical grid lines */
+        var gV = setA(svgEl("g"), { stroke: "#d8d8d8", "stroke-width": "0.5" });
+        _xLabels.forEach(function (_, i) {
+          gV.appendChild(mkLine(xAt(i), pY, xAt(i), pY + pH));
+        });
+        _svg.appendChild(gV);
+
+        /* Axis borders */
+        _svg.appendChild(mkLine(pX, pY, pX, pY + pH,
+          { stroke: "#9a9a9a", "stroke-width": "1" }));
+        _svg.appendChild(mkLine(pX, pY + pH, pX + pW, pY + pH,
+          { stroke: "#9a9a9a", "stroke-width": "1" }));
+
+        /* Y labels */
+        var gYL = setA(svgEl("g"),
+          { fill: "#7a7a7a", "font-size": "8.5", "font-family": "system-ui,sans-serif" });
+        gYL.appendChild(mkText("High", pX - 5, pY + 4,      { "text-anchor": "end" }));
+        gYL.appendChild(mkText("Low",  pX - 5, pY + pH + 4, { "text-anchor": "end" }));
+        _svg.appendChild(gYL);
+
+        /* Metric label (rotated) */
+        _svg.appendChild(mkText(_metric.toUpperCase(), 0, 0, {
+          fill: "#7a7a7a", "font-size": "7.5", "font-family": "system-ui,sans-serif",
+          "letter-spacing": "0.07em", "text-anchor": "middle",
+          transform: "translate(" + (pX - 36) + "," + (pY + pH / 2) + ") rotate(-90)"
+        }));
+
+        /* X labels */
+        var gXL = setA(svgEl("g"), {
+          fill: "#5c5c5c", "font-size": "8",
+          "font-family": "system-ui,sans-serif", "text-anchor": "middle"
+        });
+        _xLabels.forEach(function (lb, i) {
+          gXL.appendChild(mkText(lb, xAt(i), pY + pH + 16));
+        });
+        _svg.appendChild(gXL);
+
+        /* Series */
+        var isDim = _hover !== null;
+        _series.forEach(function (s) {
+          if (!_visible[s.num]) return;
+
+          var dimmed  = isDim && _hover !== s.num;
+          var focused = isDim && _hover === s.num;
+          var gS = setA(svgEl("g"), {
+            fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round",
+            opacity: dimmed ? "0.14" : "1"
+          });
+
+          /* Build contiguous segments (null = break) */
+          var segs = [], cur = [];
+          s.values.forEach(function (v, i) {
+            if (v != null) {
+              cur.push({ x: xAt(i), y: yAt(v) });
+            } else if (cur.length) {
+              segs.push(cur); cur = [];
+            }
+          });
+          if (cur.length) segs.push(cur);
+
+          var sw = (s.weight || 1.75) * (focused ? 1.5 : 1);
+
+          segs.forEach(function (seg) {
+            var d = seg.map(function (p, pi) {
+              return (pi === 0 ? "M " : "L ") + p.x.toFixed(1) + " " + p.y.toFixed(1);
+            }).join(" ");
+            gS.appendChild(setA(svgEl("path"),
+              { d: d, stroke: s.color, "stroke-width": sw }));
+          });
+
+          /* Endpoint dot */
+          var lv = null, li = -1;
+          s.values.forEach(function (v, i) { if (v != null) { lv = v; li = i; } });
+          if (li >= 0) {
+            gS.appendChild(setA(svgEl("circle"), {
+              cx: xAt(li).toFixed(1), cy: yAt(lv).toFixed(1),
+              r: focused ? 5 : 3.5, fill: s.color
+            }));
+          }
+          _svg.appendChild(gS);
+        });
+      } /* end render */
+
+      /* Hover: highlight nearest series */
+      function onMove(e) {
+        var rect = container.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+        var pX2 = M.left, pY2 = M.top;
+        var pW2 = container.clientWidth  - M.left - M.right;
+        var pH2 = container.clientHeight - M.top  - M.bottom;
+        if (mx < pX2 - 6 || mx > pX2 + pW2 + 6 ||
+            my < pY2 - 6 || my > pY2 + pH2 + 6) {
+          if (_hover !== null) { _hover = null; render(); }
+          return;
+        }
+        var allV2 = [];
+        _series.forEach(function (s) {
+          if (_visible[s.num])
+            s.values.forEach(function (v) { if (v != null) allV2.push(v); });
+        });
+        if (!allV2.length) return;
+        var mn = Math.min.apply(null, allV2), mx2 = Math.max.apply(null, allV2);
+        var p2 = Math.max((mx2 - mn) * 0.14, 3);
+        var yLo2 = mn - p2, yHi2 = mx2 + p2;
+        var nn = _xLabels.length;
+        function xAt2(i) { return pX2 + (i / (nn - 1)) * pW2; }
+        function yAt2(v) { return pY2 + pH2 - ((v - yLo2) / (yHi2 - yLo2)) * pH2; }
+        var best = null, bestD = Infinity;
+        _series.forEach(function (s) {
+          if (!_visible[s.num]) return;
+          s.values.forEach(function (v, i) {
+            if (v == null) return;
+            var dx = mx - xAt2(i), dy = my - yAt2(v);
+            var d = dx * dx + dy * dy;
+            if (d < bestD) { bestD = d; best = s.num; }
+          });
+        });
+        var next = bestD < 2400 ? best : null;
+        if (next !== _hover) { _hover = next; render(); }
+      }
+
+      container.addEventListener("pointermove", onMove);
+      container.addEventListener("pointerleave", function () {
+        if (_hover !== null) { _hover = null; render(); }
+      });
+
+      /* Public API */
+      this.setVisible = function (num, bool) { _visible[num] = bool; render(); };
+      this.setMetric  = function (label)     { _metric = label; render(); };
+      this.setSeries  = function (arr) {
+        _series = arr.map(function (s) {
+          return { num: s.num, name: s.name, color: s.color, weight: s.weight,
+                   values: s.values.slice() };
+        });
+        _visible = {};
+        _series.forEach(function (s) { _visible[s.num] = true; });
+        render();
+      };
+      this.destroy = function () {
+        container.removeEventListener("pointermove", onMove);
+        if (_ro) _ro.disconnect();
+      };
+
+      var _ro = typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(function () { render(); })
+        : null;
+      if (_ro) _ro.observe(container);
+      requestAnimationFrame(render);
+    } /* end HrLineChart */
+
+    window.HrLineChart  = HrLineChart;
+    window.CHART_SERIES = CHART_SERIES;
+    window.HR_CHART_SERIES_RACE1 = CHART_SERIES_RACE1;
+    window.HR_CHART_SERIES_RACE2 = CHART_SERIES_RACE2;
+  })();
+  </script>
+  <script>
+    (function () {
+      var shell = document.querySelector(".horse-picker-shell");
+      if (!shell) return;
+      var trig = document.getElementById("horse-picker-trigger");
+      var panel = document.getElementById("horse-picker-panel");
+      var backdrop = document.getElementById("horse-picker-backdrop");
+      var done = document.getElementById("horse-picker-done");
+      var summary = document.getElementById("horse-picker-summary");
+
+      function countVisibleLines() {
+        if (!panel) return 0;
+        return Array.prototype.reduce.call(
+          panel.querySelectorAll('.chart-horse-grid input[type="checkbox"]'),
+          function (n, el) {
+            return n + (el.checked ? 1 : 0);
+          },
+          0
+        );
+      }
+
+      function refreshSummary() {
+        if (!summary) return;
+        var n = countVisibleLines();
+        summary.textContent =
+          n + " line" + (n === 1 ? "" : "s") + " visible · tap to add or remove";
+      }
+
+      function openPicker() {
+        panel.hidden = false;
+        backdrop.hidden = false;
+        trig.setAttribute("aria-expanded", "true");
+      }
+
+      function closePicker() {
+        panel.hidden = true;
+        backdrop.hidden = true;
+        trig.setAttribute("aria-expanded", "false");
+        refreshSummary();
+      }
+
+      trig.addEventListener("click", function () {
+        if (panel.hidden) openPicker();
+        else closePicker();
+      });
+      done.addEventListener("click", closePicker);
+      backdrop.addEventListener("click", closePicker);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !panel.hidden) {
+          e.preventDefault();
+          closePicker();
+        }
+      });
+
+      panel.addEventListener("change", function (e) {
+        var t = e.target;
+        if (!t || t.tagName !== "INPUT" || t.type !== "checkbox") return;
+        var m = /^chart-line-h(\d+)$/.exec(t.id);
+        if (!m) return;
+        var num = parseInt(m[1], 10);
+        if (window.__hrMainChart) window.__hrMainChart.setVisible(num, t.checked);
+        refreshSummary();
+      });
+      window.__hrRefreshMainLineSummary = refreshSummary;
+      refreshSummary();
+    })();
+
+    (function () {
+      var root = document.getElementById("dashboard-root");
+      if (!root) return;
+
+      var MAX_WIDGETS = 3;
+      var MAIN_BAND = 0.62;
+      var MID_BAND = 0.78;
+      var H3_TOP_FRAC = 0.56;
+      var viewCounter = 0;
+      var drag = null;
+
+      function getWidgets() {
+        return Array.prototype.slice.call(root.querySelectorAll(":scope > .dash-widget"));
+      }
+
+      var resizer = document.getElementById("dash-col-resizer");
+      var colDrag = null;
+      var winResizeTimer = null;
+
+      function applyColRatio(r) {
+        r = Math.max(0.18, Math.min(0.82, r));
+        root.dataset.colRatio = String(r);
+        root.style.gridTemplateColumns =
+          "minmax(140px, " + r + "fr) 10px minmax(140px, " + (1 - r) + "fr)";
+      }
+
+      function syncColResizer() {
+        if (!resizer) return;
+        var layout = root.dataset.layout;
+        var rw = root.getBoundingClientRect().width;
+        var narrow = rw <= 960;
+        var isSplit = layout === "split-h" || layout === "split-h3";
+        if (!isSplit || narrow) {
+          resizer.hidden = true;
+          root.style.gridTemplateColumns = "";
+        } else {
+          resizer.hidden = false;
+          applyColRatio(parseFloat(root.dataset.colRatio || "0.5", 10));
+        }
+      }
+
+      function setLayout(layout) {
+        root.dataset.layout = layout;
+        syncColResizer();
+      }
+
+      function endColResize() {
+        if (!colDrag) return;
+        colDrag = null;
+        root.classList.remove("is-resizing-cols");
+        window.removeEventListener("pointermove", onColResizeMove);
+        window.removeEventListener("pointerup", endColResize);
+        window.removeEventListener("pointercancel", endColResize);
+      }
+
+      function onColResizeMove(ev) {
+        if (!colDrag) return;
+        var rect = root.getBoundingClientRect();
+        var pad = 10;
+        var inner = Math.max(120, rect.width - pad * 2);
+        var x = ev.clientX - rect.left - pad;
+        applyColRatio(x / inner);
+      }
+
+      function onColResizerPointerDown(e) {
+        if (e.button !== 0 || !e.isPrimary) return;
+        var layout = root.dataset.layout;
+        if (layout !== "split-h" && layout !== "split-h3") return;
+        if (root.getBoundingClientRect().width <= 960) return;
+        e.preventDefault();
+        e.stopPropagation();
+        colDrag = { active: true };
+        root.classList.add("is-resizing-cols");
+        window.addEventListener("pointermove", onColResizeMove);
+        window.addEventListener("pointerup", endColResize);
+        window.addEventListener("pointercancel", endColResize);
+      }
+
+      function findWidgetBySlot(slot) {
+        return root.querySelector('.dash-widget[data-slot="' + slot + '"]');
+      }
+
+      function slotFromPoint(clientX, clientY) {
+        var r = root.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return "full";
+        var nx = (clientX - r.left) / r.width;
+        var ny = (clientY - r.top) / r.height;
+        var layout = root.dataset.layout;
+        var n = getWidgets().length;
+
+        if (n <= 1) return "full";
+
+        var colSplit = parseFloat(root.dataset.colRatio || "0.5", 10);
+
+        if (layout === "split-h3") {
+          if (r.width <= 960) {
+            if (ny < 0.34) return "left";
+            if (ny < 0.67) return "right";
+            return "wide";
+          }
+          if (ny >= H3_TOP_FRAC) return "wide";
+          return nx < colSplit ? "left" : "right";
+        }
+
+        if (layout === "split-h") {
+          if (ny >= MAIN_BAND) {
+            return ny < MID_BAND ? "top" : "bottom";
+          }
+          var narrowStack = r.width <= 960;
+          if (narrowStack) {
+            return ny < 0.5 ? "left" : "right";
+          }
+          return nx < colSplit ? "left" : "right";
+        }
+
+        if (layout === "split-v") {
+          if (nx >= MAIN_BAND) {
+            return nx < MID_BAND ? "left" : "right";
+          }
+          return ny < 0.5 ? "top" : "bottom";
+        }
+
+        return "full";
+      }
+
+      function setSlot(el, slot) {
+        el.dataset.slot = slot;
+        el.style.gridArea = slot;
+      }
+
+      function moveWidget(el, newSlot) {
+        var widgets = getWidgets();
+        var n = widgets.length;
+        if (n === 0) return;
+
+        if (n === 1) {
+          setLayout("solo");
+          setSlot(widgets[0], "full");
+          return;
+        }
+
+        if (n === 3) {
+          if (root.dataset.layout !== "split-h3") setLayout("split-h3");
+          var cur = el.dataset.slot;
+          if (newSlot === cur || newSlot === "full") return;
+          if (newSlot !== "left" && newSlot !== "right" && newSlot !== "wide") return;
+          var other = findWidgetBySlot(newSlot);
+          if (other && other !== el) setSlot(other, cur);
+          setSlot(el, newSlot);
+          return;
+        }
+
+        if (n !== 2) return;
+
+        var other = widgets[0] === el ? widgets[1] : widgets[0];
+
+        if (newSlot === "top" || newSlot === "bottom") {
+          setLayout("split-v");
+          setSlot(el, newSlot);
+          setSlot(other, newSlot === "top" ? "bottom" : "top");
+          return;
+        }
+
+        if (newSlot === "left" || newSlot === "right") {
+          setLayout("split-h");
+          setSlot(el, newSlot);
+          setSlot(other, newSlot === "left" ? "right" : "left");
+          return;
+        }
+      }
+
+      function applySolitaryLayout() {
+        var widgets = getWidgets();
+        if (widgets.length !== 1) return;
+        setLayout("solo");
+        setSlot(widgets[0], "full");
+      }
+
+      function normalizeAfterClose() {
+        var widgets = getWidgets();
+        var n = widgets.length;
+        if (n === 1) {
+          applySolitaryLayout();
+          return;
+        }
+        if (n !== 2) return;
+        var s0 = widgets[0].dataset.slot;
+        var s1 = widgets[1].dataset.slot;
+        if (s0 === "wide" || s1 === "wide") {
+          setLayout("split-v");
+          var wideW = s0 === "wide" ? widgets[0] : widgets[1];
+          var otherW = s0 === "wide" ? widgets[1] : widgets[0];
+          setSlot(otherW, "top");
+          setSlot(wideW, "bottom");
+          return;
+        }
+        setLayout("split-h");
+        if (
+          (s0 === "left" && s1 === "right") ||
+          (s0 === "right" && s1 === "left")
+        ) {
+          return;
+        }
+        setSlot(widgets[0], "left");
+        setSlot(widgets[1], "right");
+      }
+
+      function clearHintTargets() {
+        root.querySelectorAll(".snap-hint.is-target").forEach(function (h) {
+          h.classList.remove("is-target");
+        });
+      }
+
+      function updateHintTarget(slot) {
+        clearHintTargets();
+        var hint = root.querySelector('.snap-hint[data-slot="' + slot + '"]');
+        if (hint) hint.classList.add("is-target");
+      }
+
+      function endDrag(ev) {
+        if (!drag) return;
+        var el = drag.el;
+        var cancelled = ev.type === "pointercancel";
+        el.classList.remove("is-dragging");
+        el.style.transform = "";
+        root.classList.remove("is-dragging-widget");
+        clearHintTargets();
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", endDrag);
+        window.removeEventListener("pointercancel", endDrag);
+        if (!cancelled) moveWidget(el, slotFromPoint(ev.clientX, ev.clientY));
+        drag = null;
+      }
+
+      function onMove(ev) {
+        if (!drag) return;
+        var dx = ev.clientX - drag.startX;
+        var dy = ev.clientY - drag.startY;
+        drag.el.style.transform = "translate(" + dx + "px," + dy + "px)";
+        updateHintTarget(slotFromPoint(ev.clientX, ev.clientY));
+      }
+
+      function onHeaderPointerDown(e) {
+        if (e.button !== 0 || !e.isPrimary) return;
+        if (e.target.closest(".dash-widget-close")) return;
+        var el = e.currentTarget.closest(".dash-widget");
+        if (!el) return;
+        e.preventDefault();
+        drag = { el: el, startX: e.clientX, startY: e.clientY };
+        el.classList.add("is-dragging");
+        root.classList.add("is-dragging-widget");
+        updateHintTarget(slotFromPoint(e.clientX, e.clientY));
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", endDrag);
+        window.addEventListener("pointercancel", endDrag);
+      }
+
+      function wireWidget(el) {
+        var header = el.querySelector(".dash-widget-header");
+        var closeBtn = el.querySelector(".dash-widget-close");
+        if (header && !header.dataset.dashDragWired) {
+          header.dataset.dashDragWired = "1";
+          header.addEventListener("pointerdown", onHeaderPointerDown);
+        }
+        if (closeBtn && !closeBtn.dataset.dashCloseWired) {
+          closeBtn.dataset.dashCloseWired = "1";
+          closeBtn.addEventListener("pointerdown", function (e) {
+            e.stopPropagation();
+          });
+          closeBtn.addEventListener("click", function () {
+            el.remove();
+            normalizeAfterClose();
+            refreshAddButtonState();
+          });
+        }
+      }
+
+      function refreshAddButtonState() {
+        var b = document.getElementById("add-view-btn");
+        if (!b) return;
+        var n = getWidgets().length;
+        b.disabled = n >= MAX_WIDGETS;
+        b.title =
+          n >= MAX_WIDGETS
+            ? "Remove a view to add another (maximum three)."
+            : "";
+      }
+
+      root.querySelectorAll(":scope > .dash-widget").forEach(wireWidget);
+      refreshAddButtonState();
+
+      if (resizer) {
+        resizer.addEventListener("pointerdown", onColResizerPointerDown);
+      }
+      window.addEventListener("resize", function () {
+        clearTimeout(winResizeTimer);
+        winResizeTimer = setTimeout(syncColResizer, 100);
+      });
+      syncColResizer();
+
+      function buildCustomWidget() {
+        var existing = getWidgets();
+        if (existing.length >= MAX_WIDGETS) return null;
+        viewCounter += 1;
+        var v = viewCounter;
+        var wrap = document.createElement("div");
+        wrap.className = "dash-widget dash-widget--custom";
+        if (existing.length === 2) {
+          setLayout("split-h3");
+          var a = existing[0];
+          var b = existing[1];
+          var sa = a.dataset.slot;
+          var sb = b.dataset.slot;
+          var isTopBottom =
+            (sa === "top" && sb === "bottom") || (sa === "bottom" && sb === "top");
+          if (isTopBottom) {
+            setSlot(a, "left");
+            setSlot(b, "right");
+          } else if (
+            !(
+              (sa === "left" && sb === "right") ||
+              (sa === "right" && sb === "left")
+            )
+          ) {
+            setSlot(a, "left");
+            setSlot(b, "right");
+          }
+          setSlot(wrap, "wide");
+        } else if (existing.length === 1) {
+          setLayout("split-h");
+          setSlot(existing[0], "left");
+          setSlot(wrap, "right");
+        } else {
+          setLayout("solo");
+          setSlot(wrap, "full");
+        }
+        wrap.innerHTML =
+          '<header class="dash-widget-header">' +
+          '<span class="dash-widget-grip" role="button" tabindex="0" aria-label="Drag to rearrange panels" title="Drag — swap columns; from two-up drag down to stack; when stacked drag right edge to split; with three views drag to move between full-width lower row and columns"></span>' +
+          '<h2 class="dash-widget-title">Custom view ' +
+          v +
+          "</h2>" +
+          '<button type="button" class="dash-widget-close" aria-label="Remove custom view ' +
+          v +
+          '">&times;</button>' +
+          "</header>" +
+          '<div class="dash-widget-body">' +
+          '<div class="added-view-controls">' +
+          '<div class="control-cluster">' +
+          '<label class="inline-label" for="added-metric-' +
+          v +
+          '">Metric</label>' +
+          '<select id="added-metric-' +
+          v +
+          '" class="wire-select wire-select--sm" aria-label="Metric for custom view ' +
+          v +
+          '">' +
+          "<option>Speed figure</option>" +
+          "<option>Early pace</option>" +
+          "<option>Class rating</option>" +
+          "<option>Finish time index</option>" +
+          "</select>" +
+          "</div>" +
+          '<div class="control-cluster">' +
+          '<label class="inline-label" for="added-viz-' +
+          v +
+          '">View type</label>' +
+          '<select id="added-viz-' +
+          v +
+          '" class="wire-select wire-select--sm" aria-label="Visualization type for custom view ' +
+          v +
+          '">' +
+          "<option>Line chart</option>" +
+          "<option>Bar chart</option>" +
+          "<option>Table</option>" +
+          "</select>" +
+          "</div>" +
+          "</div>" +
+          '<div class="added-view-canvas">' +
+          '<div class="added-view-visual" aria-live="polite"></div>' +
+          "</div>" +
+          '<div class="factors-block">' +
+          '<span class="factors-label">Conditional factors</span>' +
+          '<p class="added-view-factors-hint">None applied by default. Turn on factors below after you set metric and view type.</p>' +
+          '<div class="factor-toggles">' +
+          '<label class="factor-chip"><input type="checkbox" /> Surface type</label>' +
+          '<label class="factor-chip"><input type="checkbox" /> Distance band</label>' +
+          '<label class="factor-chip"><input type="checkbox" /> Field size</label>' +
+          '<label class="factor-chip"><input type="checkbox" /> Track condition</label>' +
+          '<label class="factor-chip"><input type="checkbox" /> Class level</label>' +
+          "</div>" +
+          "</div>" +
+          "</div>";
+        return wrap;
+      }
+
+      var addBtn = document.getElementById("add-view-btn");
+      if (addBtn) {
+        addBtn.addEventListener("click", function () {
+          var w = buildCustomWidget();
+          if (!w) return;
+          root.appendChild(w);
+          wireWidget(w);
+          if (typeof window.__wireHrCustomView === "function") {
+            window.__wireHrCustomView(w);
+          }
+          refreshAddButtonState();
+        });
+      }
+    })();
+
+    (function () {
+      var BAR_WIDTHS_RACE1 = {
+        "Speed figure": [59, 76, 48, 87, 41, 93, 55, 67, 38, 82, 44, 71, 52, 64, 89, 46, 73, 58, 91, 42],
+        "Early pace": [68, 61, 74, 55, 79, 52, 70, 63, 81, 57, 66, 59, 72, 64, 58, 76, 53, 69, 62, 74],
+        "Class rating": [52, 84, 61, 73, 49, 88, 56, 79, 44, 91, 67, 58, 75, 62, 83, 51, 77, 65, 54, 86],
+        "Finish time index": [71, 54, 82, 60, 77, 48, 69, 85, 57, 63, 74, 52, 80, 66, 59, 73, 55, 88, 61, 64],
+      };
+
+      var BAR_WIDTHS_RACE2 = {};
+      Object.keys(BAR_WIDTHS_RACE1).forEach(function (k) {
+        BAR_WIDTHS_RACE2[k] = BAR_WIDTHS_RACE1[k].slice(0, 9);
+      });
+
+      var activeBarWidths = BAR_WIDTHS_RACE1;
+      var raceDataSlot = 0;
+
+      var MOCK_HORSES = [
+        { num: 1, name: "Midnight Courier" },
+        { num: 2, name: "Silverpine Express" },
+        { num: 3, name: "Harbor Lights" },
+        { num: 5, name: "Velvet Thunder" },
+        { num: 6, name: "Canterbury Tale" },
+        { num: 7, name: "Rasputin\u2019s Fancy" },
+        { num: 8, name: "Oaklawn Oracle" },
+        { num: 10, name: "Crimson Delta" },
+      ];
+
+      var ALL_HORSES = [
+        { num: 1,  name: "Midnight Courier" },
+        { num: 2,  name: "Silverpine Express" },
+        { num: 3,  name: "Harbor Lights" },
+        { num: 4,  name: "True North Pride" },
+        { num: 5,  name: "Velvet Thunder" },
+        { num: 6,  name: "Canterbury Tale" },
+        { num: 7,  name: "Rasputin\u2019s Fancy" },
+        { num: 8,  name: "Oaklawn Oracle" },
+        { num: 9,  name: "Paper Lantern" },
+        { num: 10, name: "Crimson Delta" },
+        { num: 11, name: "Widow\u2019s Morn" },
+        { num: 12, name: "Beacon Hill" },
+        { num: 13, name: "Summer Solstice" },
+        { num: 14, name: "Ironwood Prince" },
+        { num: 15, name: "Gatsby\u2019s Ghost" },
+        { num: 16, name: "Prairie Orchard" },
+        { num: 17, name: "Blue Heron Flyer" },
+        { num: 18, name: "Noble Contradiction" },
+        { num: 19, name: "Rocket to Riches" },
+        { num: 20, name: "Lamplighter Lane" },
+      ];
+
+      var HORSES_RACE2 = ALL_HORSES.slice(0, 9);
+      var mockHorseList = ALL_HORSES;
+
+      var SPEED_VIZ_COPY = {
+        "Line chart":
+          "Each point is one historical race, left to right (Race 1 = earliest shown).",
+        "Bar chart":
+          "One bar per horse — length reflects mock values for the selected metric.",
+        Table:
+          "Mock past-performance grid: horses × recent races. All numbers are illustrative wireframe data.",
+      };
+
+      var HORSES_MUTED_PICKER_RACE1 = ALL_HORSES.filter(function (h) {
+        return h.num >= 11 && h.num <= 20;
+      });
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function buildSpeedPickerGridHtml(seriesList, mutedExtras) {
+        var h = "";
+        seriesList.forEach(function (s) {
+          var raceCt = s.values.filter(function (v) { return v != null; }).length;
+          var empty = raceCt === 0;
+          var sw = empty ? "" : ' style="background:' + s.color + '"';
+          h += '<label class="chart-line-pick' + (empty ? " is-empty" : "") + '">';
+          h += '<input type="checkbox" id="chart-line-h' + s.num + '" checked />';
+          h += '<span class="chart-line-swatch"' + sw + "></span>";
+          h += '<span class="chart-line-text">';
+          h += '<span class="chart-line-name">' + s.num + " \u00b7 " + escapeHtml(s.name) + "</span>";
+          h += '<span class="chart-line-meta">' +
+            (empty ? "0 races — no line" : raceCt + " race" + (raceCt === 1 ? "" : "s") + " plotted") +
+            "</span></span></label>";
+        });
+        (mutedExtras || []).forEach(function (ex) {
+          h += '<label class="chart-line-pick chart-line-pick--muted">';
+          h += '<input type="checkbox" id="chart-line-h' + ex.num + '" />';
+          h += '<span class="chart-line-swatch" style="background:#bdbdbd;height:2px;margin-top:6px"></span>';
+          h += '<span class="chart-line-text">';
+          h += '<span class="chart-line-name">' + ex.num + " \u00b7 " + escapeHtml(ex.name) + "</span>";
+          h += '<span class="chart-line-meta">Wireframe — no sample line</span></span></label>';
+        });
+        return h;
+      }
+
+      function renderBarComparisonRows(horses, widthsByMetric) {
+        var scroll = document.querySelector("#bar-chart-body .horse-scroll");
+        if (!scroll) return;
+        var w = widthsByMetric["Speed figure"] || [];
+        var html = "";
+        horses.forEach(function (horse, hi) {
+          var pct = w[hi] != null ? w[hi] : 50;
+          var id = "h" + horse.num;
+          html += '<div class="horse-row" role="listitem">';
+          html += '<div class="horse-meta">';
+          html += '<input type="checkbox" name="horse" id="' + id + '" checked aria-label="Include ' +
+            horse.num + " " + escapeHtml(horse.name) + ' in charts" />';
+          html += '<label class="horse-label" for="' + id + '">';
+          html += '<span class="horse-num">' + horse.num + '</span>';
+          html += '<span class="horse-name">' + escapeHtml(horse.name) + "</span></label>";
+          html += '</div>';
+          html += '<div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' +
+            pct + '%"></div></div></div>';
+        });
+        scroll.innerHTML = html;
+      }
+
+      function applyRaceDataSlot(slot) {
+        raceDataSlot = slot;
+        var isR2 = slot === 1;
+        window.CHART_SERIES = isR2 ? window.HR_CHART_SERIES_RACE2 : window.HR_CHART_SERIES_RACE1;
+        mockHorseList = isR2 ? HORSES_RACE2 : ALL_HORSES;
+        activeBarWidths = isR2 ? BAR_WIDTHS_RACE2 : BAR_WIDTHS_RACE1;
+
+        var barHint = document.getElementById("bar-scroll-hint");
+        if (barHint) {
+          barHint.textContent = isR2
+            ? "Nine-horse field — scroll if needed on small screens"
+            : "Up to 20 entries — scroll when the field is large";
+        }
+
+        renderBarComparisonRows(mockHorseList, activeBarWidths);
+        hydrateBarChart();
+
+        var hintEl = document.getElementById("chart-horses-hint");
+        var grid = document.querySelector("#horse-picker-panel .chart-horse-grid");
+        if (grid && window.CHART_SERIES) {
+          if (hintEl) {
+            hintEl.textContent = isR2
+              ? "Uncheck to hide a line. Nine-horse field (Race 2) — mock history for each entry."
+              : "Uncheck to hide a line. (Horse 4 has no prior races in this sample.)";
+          }
+          grid.innerHTML = isR2
+            ? buildSpeedPickerGridHtml(window.CHART_SERIES, null)
+            : buildSpeedPickerGridHtml(window.CHART_SERIES, HORSES_MUTED_PICKER_RACE1);
+        }
+
+        if (window.__hrMainChart) {
+          window.__hrMainChart.setSeries(window.CHART_SERIES);
+          var me = document.getElementById("metric-speed");
+          if (me) window.__hrMainChart.setMetric(me.value);
+        }
+        if (typeof window.__hrRefreshMainLineSummary === "function") {
+          window.__hrRefreshMainLineSummary();
+        }
+
+        refreshSpeedPanel();
+
+        document.querySelectorAll(".dash-widget--custom").forEach(function (w) {
+          if (typeof w.__hrRebuild === "function") w.__hrRebuild();
+        });
+      }
+
+      function syncRaceFromToolbar() {
+        var raceSel = document.getElementById("race-select");
+        if (!raceSel) return;
+        var idx = raceSel.selectedIndex;
+        applyRaceDataSlot(idx === 1 ? 1 : 0);
+      }
+
+      window.__hrApplyRaceDataSlot = applyRaceDataSlot;
+
+      function metricKey(m) {
+        if (activeBarWidths[m]) return m;
+        return "Speed figure";
+      }
+
+      function mockNumeric(metric, horseIdx, salt) {
+        var s = 0;
+        var i;
+        for (i = 0; i < metric.length; i++) s += metric.charCodeAt(i);
+        return 62 + ((s + horseIdx * 17 + salt * 11) % 34);
+      }
+
+      function banner(metric, viz) {
+        return (
+          '<div class="mock-viz-banner">Wireframe mock data · <strong>Metric:</strong> ' +
+          metric +
+          " · <strong>View:</strong> " +
+          viz +
+          "</div>"
+        );
+      }
+
+      function htmlMockTable(metric) {
+        var cols = ["R-5", "R-4", "R-3", "R-2", "R-1", "Today"];
+        var cap =
+          "Sample values — " +
+          metric.toLowerCase() +
+          " (higher reads as “better” in this wireframe)";
+        var h =
+          '<div class="mock-wire-table-wrap"><table class="mock-wire-table"><caption>' +
+          cap +
+          "</caption><thead><tr><th>Horse</th>";
+        cols.forEach(function (c) {
+          h += "<th>" + c + "</th>";
+        });
+        h += "</tr></thead><tbody>";
+        mockHorseList.forEach(function (horse, hi) {
+          h += "<tr><td>" + horse.num + " \u00b7 " + horse.name + "</td>";
+          cols.forEach(function (_c, ci) {
+            h += "<td>" + mockNumeric(metric, hi, ci + 1) + "</td>";
+          });
+          h += "</tr>";
+        });
+        h += "</tbody></table></div>";
+        return h;
+      }
+
+      function htmlMockBars(metric) {
+        var widths = activeBarWidths[metric] || activeBarWidths["Speed figure"];
+        var h = '<div class="bar-chart-body" style="padding-top:0.35rem">';
+        h += '<div class="average-label">' + metric + ' — mock scale 0–100</div>';
+        h += '<div class="horse-scroll" role="list">';
+        mockHorseList.forEach(function (horse, hi) {
+          var pct = widths[hi] !== undefined ? widths[hi] : Math.min(94, Math.max(18, mockNumeric(metric, hi, 99)));
+          h += '<div class="horse-row" role="listitem">';
+          h += '<div class="horse-meta">';
+          h += '<label class="horse-label"><span class="horse-num">' + horse.num + '</span><span class="horse-name">' + horse.name + '</span></label>';
+          h += '</div>';
+          h += '<div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' + pct + '%"></div></div>';
+          h += '</div>';
+        });
+        h += '</div></div>';
+        return h;
+      }
+
+      function htmlMockMiniLine(metric, uid) {
+        var pfx = uid ? "cv-" + uid : "cv-0";
+        var series = window.CHART_SERIES || MOCK_HORSES.map(function (h) {
+          return { num: h.num, name: h.name, color: "#5a5a5a", values: [] };
+        });
+
+        var pickerItems = "";
+        series.forEach(function (s) {
+          var raceCt = s.values.filter(function (v) { return v != null; }).length;
+          var empty = raceCt === 0;
+          var sw = empty ? "" : ' style="background:' + s.color + '"';
+          pickerItems +=
+            '<label class="chart-line-pick' + (empty ? " is-empty" : "") + '">' +
+            '<input type="checkbox" id="' + pfx + "-c" + s.num + '" checked />' +
+            '<span class="chart-line-swatch"' + sw + "></span>" +
+            '<span class="chart-line-text">' +
+              '<span class="chart-line-name">' + s.num + " \u00b7 " + s.name + "</span>" +
+              '<span class="chart-line-meta">' +
+              (empty ? "0 races — no line" : raceCt + " race" + (raceCt === 1 ? "" : "s") + " plotted") +
+              "</span></span></label>";
+        });
+
+        var picker =
+          '<div class="horse-picker-shell">' +
+            '<button type="button" class="horse-picker-trigger" id="' + pfx + '-trigger"' +
+              ' aria-expanded="false" aria-controls="' + pfx + '-panel" aria-haspopup="dialog">' +
+              '<span class="horse-picker-trigger-title">Horses on chart</span>' +
+              '<span class="horse-picker-trigger-meta" id="' + pfx + '-summary">' +
+                series.length + " lines visible \u00b7 tap to add or remove" +
+              "</span>" +
+            "</button>" +
+            '<button type="button" class="horse-picker-backdrop" id="' + pfx + '-backdrop"' +
+              ' hidden aria-label="Close horse picker"></button>' +
+            '<div class="horse-picker-panel" id="' + pfx + '-panel" role="dialog" aria-modal="true" hidden>' +
+              '<span class="factors-label">Select horses</span>' +
+              '<div class="chart-horse-grid" role="group">' + pickerItems + "</div>" +
+              '<div class="horse-picker-footer">' +
+                '<button type="button" class="horse-picker-done" id="' + pfx + '-done">Done</button>' +
+              "</div>" +
+            "</div>" +
+          "</div>";
+
+        /* chart container — HrLineChart SVG injected here by wireCustomLinePicker */
+        return picker +
+          '<div class="speed-chart-wrap">' +
+            '<div class="speed-chart-plot" id="' + pfx + '-chart"></div>' +
+            '<p class="axis-caption-x">Horizontal axis = ten most recent races. ' +
+              "Higher on chart = stronger mock " + metric.toLowerCase() + ".</p>" +
+          "</div>";
+      }
+
+      function wireCustomLinePicker(vis, uid) {
+        var pfx   = "cv-" + uid;
+        var trig  = document.getElementById(pfx + "-trigger");
+        var panel = document.getElementById(pfx + "-panel");
+        var back  = document.getElementById(pfx + "-backdrop");
+        var done  = document.getElementById(pfx + "-done");
+        var sumEl = document.getElementById(pfx + "-summary");
+        var chartEl = document.getElementById(pfx + "-chart");
+        if (!trig || !panel || !chartEl || typeof window.HrLineChart !== "function") return null;
+
+        /* Instantiate dynamic chart */
+        var chart = new window.HrLineChart(chartEl, {
+          series: window.CHART_SERIES
+        });
+
+        var series = window.CHART_SERIES || [];
+
+        function countV() {
+          return series.reduce(function (n, s) {
+            var cb = document.getElementById(pfx + "-c" + s.num);
+            return n + (cb && cb.checked ? 1 : 0);
+          }, 0);
+        }
+        function refreshSum() {
+          var n = countV();
+          if (sumEl) sumEl.textContent = n + " line" + (n === 1 ? "" : "s") + " visible \u00b7 tap to add or remove";
+        }
+        function open()  { panel.hidden = false; if (back) back.hidden = false; trig.setAttribute("aria-expanded", "true"); }
+        function close() { panel.hidden = true;  if (back) back.hidden = true;  trig.setAttribute("aria-expanded", "false"); refreshSum(); }
+
+        trig.addEventListener("click", function () { panel.hidden ? open() : close(); });
+        if (done) done.addEventListener("click", close);
+        if (back) back.addEventListener("click", close);
+
+        series.forEach(function (s) {
+          var cb = document.getElementById(pfx + "-c" + s.num);
+          if (cb) {
+            cb.addEventListener("change", function () {
+              chart.setVisible(s.num, cb.checked);
+              refreshSum();
+            });
+          }
+        });
+        refreshSum();
+        return chart;
+      }
+
+      function buildAltVizHtml(metric, viz, uid) {
+        var m = metricKey(metric);
+        var inner;
+        switch (viz) {
+          case "Bar chart":
+            inner = htmlMockBars(m);
+            break;
+          case "Table":
+            inner = htmlMockTable(m);
+            break;
+          case "Line chart":
+            inner = htmlMockMiniLine(m, uid);
+            break;
+          default:
+            inner = htmlMockMiniLine(m, uid);
+        }
+        return banner(m, viz) + inner;
+      }
+
+      function hydrateBarChart() {
+        var sel = document.getElementById("metric-bars");
+        var label = document.getElementById("bar-average-label");
+        var body = document.getElementById("bar-chart-body");
+        if (!sel || !label || !body) return;
+        var m = metricKey(sel.value);
+        var widths = activeBarWidths[m];
+        label.textContent =
+          "Field average (" + m.toLowerCase() + ") — mock scale 0–100 · wireframe";
+        var fills = body.querySelectorAll(".bar-fill");
+        var i;
+        for (i = 0; i < fills.length && i < widths.length; i++) {
+          fills[i].style.width = widths[i] + "%";
+        }
+      }
+
+      function refreshSpeedPanel() {
+        var metricEl = document.getElementById("metric-speed");
+        var vizEl    = document.getElementById("viz-speed");
+        var sub      = document.getElementById("speed-panel-subtitle");
+        var xCap     = document.getElementById("speed-axis-x-caption");
+        var lineBox  = document.getElementById("speed-viz-line");
+        var alt      = document.getElementById("speed-viz-alt");
+        if (!metricEl || !vizEl || !lineBox || !alt) return;
+        var metric = metricKey(metricEl.value);
+        var viz    = vizEl.value;
+        if (sub && SPEED_VIZ_COPY[viz]) sub.textContent = SPEED_VIZ_COPY[viz];
+        if (viz === "Line chart") {
+          lineBox.hidden = false;
+          alt.hidden = true;
+          if (window.__hrMainChart) window.__hrMainChart.setMetric(metric);
+          if (xCap) xCap.textContent =
+            "Horizontal axis = ten most recent races. Higher on chart = stronger mock " +
+            metric.toLowerCase() + ".";
+        } else {
+          lineBox.hidden = true;
+          alt.hidden = false;
+          alt.innerHTML = buildAltVizHtml(metric, viz);
+        }
+      }
+
+      function wireCustomViewDashWidget(wrap) {
+        var mSel = wrap.querySelector('select[id^="added-metric-"]');
+        var vSel = wrap.querySelector('select[id^="added-viz-"]');
+        var vis  = wrap.querySelector(".added-view-visual");
+        if (!mSel || !vSel || !vis) return;
+        var uid    = mSel.id.replace("added-metric-", "");
+        var _chart = null;
+
+        function rebuild() {
+          if (_chart) { try { _chart.destroy(); } catch (e) {} _chart = null; }
+          var viz    = vSel.value;
+          var metric = metricKey(mSel.value);
+          vis.innerHTML  = buildAltVizHtml(metric, viz, uid);
+          vis.style.overflow = viz === "Line chart" ? "visible" : "auto";
+          if (viz === "Line chart") {
+            _chart = wireCustomLinePicker(vis, uid);
+            if (_chart) _chart.setMetric(metric);
+          }
+        }
+
+        mSel.addEventListener("change", function () {
+          if (_chart) {
+            _chart.setMetric(metricKey(mSel.value));
+          } else {
+            rebuild();
+          }
+        });
+        vSel.addEventListener("change", rebuild);
+        rebuild();
+        wrap.__hrRebuild = rebuild;
+      }
+
+      var mb = document.getElementById("metric-bars");
+      if (mb) {
+        mb.addEventListener("change", hydrateBarChart);
+        hydrateBarChart();
+      }
+
+      var ms = document.getElementById("metric-speed");
+      var vs = document.getElementById("viz-speed");
+      if (ms) ms.addEventListener("change", refreshSpeedPanel);
+      if (vs) vs.addEventListener("change", refreshSpeedPanel);
+      refreshSpeedPanel();
+
+      /* Initialize main speed-panel dynamic chart */
+      (function () {
+        var container = document.getElementById("speed-chart-container");
+        if (!container || typeof window.HrLineChart !== "function") return;
+        window.__hrMainChart = new window.HrLineChart(container, {
+          series: window.CHART_SERIES,
+          metric: "Speed figure"
+        });
+      })();
+
+      var raceSelectEl = document.getElementById("race-select");
+      if (raceSelectEl) {
+        raceSelectEl.addEventListener("change", syncRaceFromToolbar);
+      }
+      applyRaceDataSlot(0);
+
+      window.__wireHrCustomView = wireCustomViewDashWidget;
+    })();
+
+
+  </script>
+</body>
+</html>
