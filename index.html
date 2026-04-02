@@ -669,6 +669,186 @@
       gap: 0.35rem;
     }
 
+    .factors-hint {
+      margin: 0 0 0.45rem;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .factor-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+      gap: 0.5rem 0.65rem;
+      align-items: start;
+    }
+
+    @media (min-width: 720px) {
+      .factor-fields-grid {
+        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+      }
+    }
+
+    .factor-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .factor-field-label {
+      font-size: 10px;
+      font-weight: 650;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+    }
+
+    .factor-field-mode {
+      display: inline-block;
+      margin-left: 0.2rem;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-placeholder);
+      vertical-align: middle;
+    }
+
+    select.factor-select {
+      width: 100%;
+      max-width: 100%;
+      font-size: 11px;
+    }
+
+    /* Collapsible multi-select (checkbox dropdown) */
+    .factor-multi-shell {
+      position: relative;
+      z-index: 1;
+    }
+
+    .factor-multi-shell.is-open {
+      z-index: 120;
+    }
+
+    .factor-multi-trigger {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      min-height: 2rem;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-panel);
+      color: var(--text);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .factor-multi-trigger:hover {
+      background: #e8e8e8;
+    }
+
+    .factor-multi-trigger:focus {
+      outline: 2px solid #888;
+      outline-offset: 1px;
+    }
+
+    .factor-multi-trigger-text {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .factor-multi-chevron {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      opacity: 0.55;
+      line-height: 1;
+    }
+
+    .factor-multi-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 118;
+      border: none;
+      padding: 0;
+      margin: 0;
+      background: rgb(0 0 0 / 0.08);
+      cursor: default;
+    }
+
+    .factor-multi-backdrop[hidden] {
+      display: none !important;
+    }
+
+    .factor-multi-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 5px);
+      z-index: 119;
+      max-height: min(52vh, 300px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0.35rem 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 12px 32px rgb(0 0 0 / 0.16);
+    }
+
+    .factor-multi-dropdown[hidden] {
+      display: none !important;
+    }
+
+    .factor-multi-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.45rem;
+      padding: 0.4rem 0.65rem;
+      font-size: 11px;
+      color: var(--text);
+      cursor: pointer;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .factor-multi-option:hover {
+      background: rgb(0 0 0 / 0.05);
+    }
+
+    .factor-multi-option input {
+      flex-shrink: 0;
+      margin: 0.1rem 0 0;
+      accent-color: #444;
+      width: 14px;
+      height: 14px;
+    }
+
+    .factor-multi-option span {
+      line-height: 1.3;
+    }
+
+    .dash-widget--custom .factor-fields-grid {
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 640px) {
+      .dash-widget--custom .factor-fields-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     .factor-chip {
       display: inline-flex;
       align-items: center;
@@ -1258,12 +1438,92 @@
               </div>
               <div class="factors-block">
                 <span class="factors-label">Conditional factors</span>
-                <div class="factor-toggles">
-                  <label class="factor-chip"><input type="checkbox" checked /> Lorem surface</label>
-                  <label class="factor-chip"><input type="checkbox" /> Dolor distance</label>
-                  <label class="factor-chip"><input type="checkbox" checked /> Sit class level</label>
-                  <label class="factor-chip"><input type="checkbox" /> Amet pace</label>
-                  <label class="factor-chip"><input type="checkbox" /> Consectetur field</label>
+                <p class="factors-hint">Selections reshape mock values for this panel. Multi-select: open a list to choose options; click outside to close.</p>
+                <div class="conditional-factors" id="conditional-factors-compare">
+                  <div class="factor-fields-grid">
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-recency-compare">A. Recency <span class="factor-field-mode">single</span></label>
+                      <select id="cf-recency-compare" class="wire-select wire-select--sm factor-select" data-factor-key="recency" aria-label="Recency">
+                        <option value="last1">Last race</option>
+                        <option value="last2">Last 2 races</option>
+                        <option value="last3">Last 3 races</option>
+                        <option value="last4">Last 4 races</option>
+                        <option value="last5">Last 5 races</option>
+                        <option value="all" selected>All races</option>
+                      </select>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-aggregation-compare">B. Aggregation <span class="factor-field-mode">single</span></label>
+                      <select id="cf-aggregation-compare" class="wire-select wire-select--sm factor-select" data-factor-key="aggregation" aria-label="Aggregation">
+                        <option value="average" selected>Average</option>
+                        <option value="median">Median</option>
+                        <option value="highest">Highest</option>
+                        <option value="lowest">Lowest</option>
+                      </select>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-distance-compare-trigger">C. Distance <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="distance">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-distance-compare-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-distance-compare-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-distance-compare-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="same_dist" data-label="At same distance" /> <span>At same distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="similar_dist" data-label="At similar distance" /> <span>At similar distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="shorter" data-label="At shorter distance" /> <span>At shorter distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="longer" data-label="At longer distance" /> <span>At longer distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="sprints" data-label="In sprints" /> <span>In sprints</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="routes" data-label="In routes" /> <span>In routes</span></label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-surface-compare-trigger">D. Surface <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="surface">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-surface-compare-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-surface-compare-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-surface-compare-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="dirt" data-label="On dirt" /> <span>On dirt</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="turf" data-label="On turf" /> <span>On turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="synthetic" data-label="On synthetic" /> <span>On synthetic</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="fast_dirt" data-label="On fast dirt" /> <span>On fast dirt</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="off_track" data-label="On off track" /> <span>On off track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="sloppy" data-label="On sloppy track" /> <span>On sloppy track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="muddy" data-label="On muddy track" /> <span>On muddy track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="firm_turf" data-label="On firm turf" /> <span>On firm turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="yielding_turf" data-label="On yielding turf" /> <span>On yielding turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="soft_turf" data-label="On soft turf" /> <span>On soft turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="today_surface" data-label="On today&rsquo;s surface" /> <span>On today&rsquo;s surface</span></label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-class-compare-trigger">E. Class <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="class">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-class-compare-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-class-compare-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-class-compare-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="same_class" data-label="At same class" /> <span>At same class</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="similar_class" data-label="At similar class" /> <span>At similar class</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="weaker" data-label="Against weaker company" /> <span>Against weaker company</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="stronger" data-label="Against stronger company" /> <span>Against stronger company</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="claiming" data-label="In claiming races" /> <span>In claiming races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="allowance" data-label="In allowance races" /> <span>In allowance races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="maiden" data-label="In maiden races" /> <span>In maiden races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="stakes" data-label="In stakes races" /> <span>In stakes races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="graded" data-label="In graded stakes" /> <span>In graded stakes</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="class_drop" data-label="Class drop" /> <span>Class drop</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="class_rise" data-label="Class rise" /> <span>Class rise</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="lateral_class" data-label="Lateral class move" /> <span>Lateral class move</span></label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1450,11 +1710,92 @@
               </div>
               <div class="factors-block">
                 <span class="factors-label">Conditional factors</span>
-                <div class="factor-toggles">
-                  <label class="factor-chip"><input type="checkbox" checked /> Nulla pariatur</label>
-                  <label class="factor-chip"><input type="checkbox" /> Excepteur sint</label>
-                  <label class="factor-chip"><input type="checkbox" /> Occaecat cupidatat</label>
-                  <label class="factor-chip"><input type="checkbox" checked /> Non proident</label>
+                <p class="factors-hint">Selections reshape mock values for this panel. Multi-select: open a list to choose options; click outside to close.</p>
+                <div class="conditional-factors" id="conditional-factors-speed">
+                  <div class="factor-fields-grid">
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-recency-speed">A. Recency <span class="factor-field-mode">single</span></label>
+                      <select id="cf-recency-speed" class="wire-select wire-select--sm factor-select" data-factor-key="recency" aria-label="Recency">
+                        <option value="last1">Last race</option>
+                        <option value="last2">Last 2 races</option>
+                        <option value="last3">Last 3 races</option>
+                        <option value="last4">Last 4 races</option>
+                        <option value="last5">Last 5 races</option>
+                        <option value="all" selected>All races</option>
+                      </select>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-aggregation-speed">B. Aggregation <span class="factor-field-mode">single</span></label>
+                      <select id="cf-aggregation-speed" class="wire-select wire-select--sm factor-select" data-factor-key="aggregation" aria-label="Aggregation">
+                        <option value="average" selected>Average</option>
+                        <option value="median">Median</option>
+                        <option value="highest">Highest</option>
+                        <option value="lowest">Lowest</option>
+                      </select>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-distance-speed-trigger">C. Distance <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="distance">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-distance-speed-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-distance-speed-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-distance-speed-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="same_dist" data-label="At same distance" /> <span>At same distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="similar_dist" data-label="At similar distance" /> <span>At similar distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="shorter" data-label="At shorter distance" /> <span>At shorter distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="longer" data-label="At longer distance" /> <span>At longer distance</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="sprints" data-label="In sprints" /> <span>In sprints</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="routes" data-label="In routes" /> <span>In routes</span></label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-surface-speed-trigger">D. Surface <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="surface">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-surface-speed-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-surface-speed-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-surface-speed-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="dirt" data-label="On dirt" /> <span>On dirt</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="turf" data-label="On turf" /> <span>On turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="synthetic" data-label="On synthetic" /> <span>On synthetic</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="fast_dirt" data-label="On fast dirt" /> <span>On fast dirt</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="off_track" data-label="On off track" /> <span>On off track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="sloppy" data-label="On sloppy track" /> <span>On sloppy track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="muddy" data-label="On muddy track" /> <span>On muddy track</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="firm_turf" data-label="On firm turf" /> <span>On firm turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="yielding_turf" data-label="On yielding turf" /> <span>On yielding turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="soft_turf" data-label="On soft turf" /> <span>On soft turf</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="today_surface" data-label="On today&rsquo;s surface" /> <span>On today&rsquo;s surface</span></label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="factor-field">
+                      <label class="factor-field-label" for="cf-class-speed-trigger">E. Class <span class="factor-field-mode">multi</span></label>
+                      <div class="factor-multi-shell" data-factor-key="class">
+                        <button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="cf-class-speed-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="cf-class-speed-panel">
+                          <span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>
+                        <div class="factor-multi-dropdown" id="cf-class-speed-panel" role="group" hidden>
+                          <label class="factor-multi-option"><input type="checkbox" value="same_class" data-label="At same class" /> <span>At same class</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="similar_class" data-label="At similar class" /> <span>At similar class</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="weaker" data-label="Against weaker company" /> <span>Against weaker company</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="stronger" data-label="Against stronger company" /> <span>Against stronger company</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="claiming" data-label="In claiming races" /> <span>In claiming races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="allowance" data-label="In allowance races" /> <span>In allowance races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="maiden" data-label="In maiden races" /> <span>In maiden races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="stakes" data-label="In stakes races" /> <span>In stakes races</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="graded" data-label="In graded stakes" /> <span>In graded stakes</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="class_drop" data-label="Class drop" /> <span>Class drop</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="class_rise" data-label="Class rise" /> <span>Class rise</span></label>
+                          <label class="factor-multi-option"><input type="checkbox" value="lateral_class" data-label="Lateral class move" /> <span>Lateral class move</span></label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1856,6 +2197,144 @@
       refreshSummary();
     })();
 
+    /* Shared conditional-factor UI: collapsible multi-selects for custom views */
+    (function () {
+      function escAttr(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      var HR_MULTI_OPTS = {
+        distance: [
+          ["same_dist", "At same distance"],
+          ["similar_dist", "At similar distance"],
+          ["shorter", "At shorter distance"],
+          ["longer", "At longer distance"],
+          ["sprints", "In sprints"],
+          ["routes", "In routes"],
+        ],
+        surface: [
+          ["dirt", "On dirt"],
+          ["turf", "On turf"],
+          ["synthetic", "On synthetic"],
+          ["fast_dirt", "On fast dirt"],
+          ["off_track", "On off track"],
+          ["sloppy", "On sloppy track"],
+          ["muddy", "On muddy track"],
+          ["firm_turf", "On firm turf"],
+          ["yielding_turf", "On yielding turf"],
+          ["soft_turf", "On soft turf"],
+          ["today_surface", "On today\u2019s surface"],
+        ],
+        class: [
+          ["same_class", "At same class"],
+          ["similar_class", "At similar class"],
+          ["weaker", "Against weaker company"],
+          ["stronger", "Against stronger company"],
+          ["claiming", "In claiming races"],
+          ["allowance", "In allowance races"],
+          ["maiden", "In maiden races"],
+          ["stakes", "In stakes races"],
+          ["graded", "In graded stakes"],
+          ["class_drop", "Class drop"],
+          ["class_rise", "Class rise"],
+          ["lateral_class", "Lateral class move"],
+        ],
+      };
+
+      window.__hrBuildFactorMultiShell = function (factorKey, idBase) {
+        var rows = HR_MULTI_OPTS[factorKey] || [];
+        var panelId = idBase + "-panel";
+        var trigId = idBase + "-trigger";
+        var opts = rows
+          .map(function (row) {
+            return (
+              '<label class="factor-multi-option"><input type="checkbox" value="' +
+              row[0] +
+              '" data-label="' +
+              escAttr(row[1]) +
+              '" /> <span>' +
+              row[1] +
+              "</span></label>"
+            );
+          })
+          .join("");
+        return (
+          '<div class="factor-multi-shell" data-factor-key="' +
+          factorKey +
+          '">' +
+          '<button type="button" class="factor-multi-trigger wire-select wire-select--sm" id="' +
+          trigId +
+          '" aria-expanded="false" aria-haspopup="listbox" aria-controls="' +
+          panelId +
+          '">' +
+          '<span class="factor-multi-trigger-text">None selected</span><span class="factor-multi-chevron" aria-hidden="true">\u25BE</span></button>' +
+          '<button type="button" class="factor-multi-backdrop" hidden aria-hidden="true" tabindex="-1"></button>' +
+          '<div class="factor-multi-dropdown" id="' +
+          panelId +
+          '" role="group" hidden>' +
+          opts +
+          "</div></div>"
+        );
+      };
+
+      window.__hrBuildConditionalFactorsMarkup = function (sx) {
+        return (
+          '<p class="factors-hint">Selections reshape mock values for this panel. Multi-select: open a list to choose options; click outside to close.</p>' +
+          '<div class="conditional-factors" id="conditional-factors-' +
+          sx +
+          '">' +
+          '<div class="factor-fields-grid">' +
+          '<div class="factor-field">' +
+          '<label class="factor-field-label" for="cf-recency-' +
+          sx +
+          '">A. Recency <span class="factor-field-mode">single</span></label>' +
+          '<select id="cf-recency-' +
+          sx +
+          '" class="wire-select wire-select--sm factor-select" data-factor-key="recency" aria-label="Recency">' +
+          '<option value="last1">Last race</option>' +
+          '<option value="last2">Last 2 races</option>' +
+          '<option value="last3">Last 3 races</option>' +
+          '<option value="last4">Last 4 races</option>' +
+          '<option value="last5">Last 5 races</option>' +
+          '<option value="all" selected>All races</option>' +
+          "</select></div>" +
+          '<div class="factor-field">' +
+          '<label class="factor-field-label" for="cf-aggregation-' +
+          sx +
+          '">B. Aggregation <span class="factor-field-mode">single</span></label>' +
+          '<select id="cf-aggregation-' +
+          sx +
+          '" class="wire-select wire-select--sm factor-select" data-factor-key="aggregation" aria-label="Aggregation">' +
+          '<option value="average" selected>Average</option>' +
+          '<option value="median">Median</option>' +
+          '<option value="highest">Highest</option>' +
+          '<option value="lowest">Lowest</option>' +
+          "</select></div>" +
+          '<div class="factor-field">' +
+          '<label class="factor-field-label" for="cf-distance-' +
+          sx +
+          '-trigger">C. Distance <span class="factor-field-mode">multi</span></label>' +
+          window.__hrBuildFactorMultiShell("distance", "cf-distance-" + sx) +
+          "</div>" +
+          '<div class="factor-field">' +
+          '<label class="factor-field-label" for="cf-surface-' +
+          sx +
+          '-trigger">D. Surface <span class="factor-field-mode">multi</span></label>' +
+          window.__hrBuildFactorMultiShell("surface", "cf-surface-" + sx) +
+          "</div>" +
+          '<div class="factor-field">' +
+          '<label class="factor-field-label" for="cf-class-' +
+          sx +
+          '-trigger">E. Class <span class="factor-field-mode">multi</span></label>' +
+          window.__hrBuildFactorMultiShell("class", "cf-class-" + sx) +
+          "</div></div></div>"
+        );
+      };
+    })();
+
     (function () {
       var root = document.getElementById("dashboard-root");
       if (!root) return;
@@ -2239,14 +2718,9 @@
           "</div>" +
           '<div class="factors-block">' +
           '<span class="factors-label">Conditional factors</span>' +
-          '<p class="added-view-factors-hint">None applied by default. Turn on factors below after you set metric and view type.</p>' +
-          '<div class="factor-toggles">' +
-          '<label class="factor-chip"><input type="checkbox" /> Surface type</label>' +
-          '<label class="factor-chip"><input type="checkbox" /> Distance band</label>' +
-          '<label class="factor-chip"><input type="checkbox" /> Field size</label>' +
-          '<label class="factor-chip"><input type="checkbox" /> Track condition</label>' +
-          '<label class="factor-chip"><input type="checkbox" /> Class level</label>' +
-          "</div>" +
+          (typeof window.__hrBuildConditionalFactorsMarkup === "function"
+            ? window.__hrBuildConditionalFactorsMarkup("cv-" + v)
+            : "") +
           "</div>" +
           "</div>";
         return wrap;
@@ -2261,6 +2735,9 @@
           wireWidget(w);
           if (typeof window.__wireHrCustomView === "function") {
             window.__wireHrCustomView(w);
+          }
+          if (typeof window.__hrWireFactorMultiInRoot === "function") {
+            window.__hrWireFactorMultiInRoot(w);
           }
           refreshAddButtonState();
         });
@@ -2417,10 +2894,9 @@
             : buildSpeedPickerGridHtml(window.CHART_SERIES, HORSES_MUTED_PICKER_RACE1);
         }
 
+        snapshotLineBaselineFromRace();
         if (window.__hrMainChart) {
-          window.__hrMainChart.setSeries(window.CHART_SERIES);
-          var me = document.getElementById("metric-speed");
-          if (me) window.__hrMainChart.setMetric(me.value);
+          refreshSpeedLineForFactors();
         }
         if (typeof window.__hrRefreshMainLineSummary === "function") {
           window.__hrRefreshMainLineSummary();
@@ -2442,16 +2918,203 @@
 
       window.__hrApplyRaceDataSlot = applyRaceDataSlot;
 
+      var HR_DEFAULT_FACTOR_FP = "aggregation:average|recency:all";
+
+      function factorHash(str) {
+        var h = 2166136261 >>> 0;
+        var i;
+        for (i = 0; i < str.length; i++) {
+          h ^= str.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0) / 4294967295;
+      }
+
+      function factorFingerprintFromRoot(root) {
+        if (!root) return "";
+        var parts = [];
+        root.querySelectorAll("select.factor-select[data-factor-key]").forEach(function (sel) {
+          parts.push(sel.getAttribute("data-factor-key") + ":" + sel.value);
+        });
+        root.querySelectorAll(".factor-multi-shell[data-factor-key]").forEach(function (shell) {
+          var key = shell.getAttribute("data-factor-key");
+          shell.querySelectorAll(".factor-multi-option input:checked").forEach(function (inp) {
+            parts.push(key + ":" + inp.value);
+          });
+        });
+        parts.sort();
+        return parts.join("|");
+      }
+
+      function updateFactorMultiTriggerSummary(shell) {
+        var textEl = shell.querySelector(".factor-multi-trigger-text");
+        var trig = shell.querySelector(".factor-multi-trigger");
+        if (!textEl || !trig) return;
+        var checked = shell.querySelectorAll(".factor-multi-option input:checked");
+        var summary;
+        if (!checked.length) summary = "None selected";
+        else if (checked.length === 1)
+          summary = checked[0].getAttribute("data-label") || checked[0].value;
+        else summary = checked.length + " selected";
+        textEl.textContent = summary;
+        trig.setAttribute("aria-label", summary);
+      }
+
+      function closeFactorMultiShell(shell) {
+        if (!shell) return;
+        var panel = shell.querySelector(".factor-multi-dropdown");
+        var back = shell.querySelector(".factor-multi-backdrop");
+        var trig = shell.querySelector(".factor-multi-trigger");
+        if (panel) panel.hidden = true;
+        if (back) back.hidden = true;
+        if (trig) trig.setAttribute("aria-expanded", "false");
+        shell.classList.remove("is-open");
+      }
+
+      function openFactorMultiShell(shell) {
+        var parent = shell.closest(".conditional-factors");
+        if (parent) {
+          parent.querySelectorAll(".factor-multi-shell").forEach(function (s) {
+            if (s !== shell) closeFactorMultiShell(s);
+          });
+        }
+        var panel = shell.querySelector(".factor-multi-dropdown");
+        var back = shell.querySelector(".factor-multi-backdrop");
+        var trig = shell.querySelector(".factor-multi-trigger");
+        if (panel) panel.hidden = false;
+        if (back) back.hidden = false;
+        if (trig) trig.setAttribute("aria-expanded", "true");
+        shell.classList.add("is-open");
+      }
+
+      function notifyConditionalFactorsChanged(cf) {
+        if (!cf || !cf.id) return;
+        if (cf.id === "conditional-factors-compare") hydrateBarChart();
+        else if (cf.id === "conditional-factors-speed") refreshSpeedFactors();
+        else if (cf.id.indexOf("conditional-factors-cv-") === 0) {
+          var w = cf.closest(".dash-widget--custom");
+          if (w && typeof w.__hrRebuild === "function") w.__hrRebuild();
+        }
+      }
+
+      function wireFactorMultiShell(shell) {
+        if (!shell || shell.getAttribute("data-hr-multi-wired") === "1") return;
+        shell.setAttribute("data-hr-multi-wired", "1");
+        var trig = shell.querySelector(".factor-multi-trigger");
+        var back = shell.querySelector(".factor-multi-backdrop");
+        if (trig) {
+          trig.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var panel = shell.querySelector(".factor-multi-dropdown");
+            var isOpen = panel && !panel.hidden;
+            if (isOpen) closeFactorMultiShell(shell);
+            else openFactorMultiShell(shell);
+          });
+        }
+        if (back) {
+          back.addEventListener("click", function () {
+            closeFactorMultiShell(shell);
+          });
+        }
+        shell.querySelectorAll(".factor-multi-option input").forEach(function (inp) {
+          inp.addEventListener("change", function () {
+            updateFactorMultiTriggerSummary(shell);
+            notifyConditionalFactorsChanged(shell.closest(".conditional-factors"));
+          });
+        });
+        updateFactorMultiTriggerSummary(shell);
+      }
+
+      function wireFactorMultiInRoot(root) {
+        if (!root) return;
+        root.querySelectorAll(".factor-multi-shell").forEach(wireFactorMultiShell);
+      }
+
+      window.__hrWireFactorMultiInRoot = wireFactorMultiInRoot;
+
+      function isDefaultFactorFingerprint(fp) {
+        return !fp || fp === HR_DEFAULT_FACTOR_FP;
+      }
+
+      function applyBarFactorJitter(widths, fpStr) {
+        if (!widths || !widths.length) return widths ? widths.slice() : [];
+        if (isDefaultFactorFingerprint(fpStr)) return widths.slice();
+        var base = factorHash(fpStr);
+        return widths.map(function (w, i) {
+          var micro = (factorHash(fpStr + "|bar|" + i) - 0.5) * 16;
+          var shift = (base - 0.5) * 11;
+          return Math.round(Math.min(98, Math.max(5, w + micro + shift)));
+        });
+      }
+
+      function deepCloneChartSeries(series) {
+        return series.map(function (s) {
+          return {
+            num: s.num,
+            name: s.name,
+            color: s.color,
+            weight: s.weight,
+            values: s.values.map(function (v) { return v; }),
+          };
+        });
+      }
+
+      function applyLineFactorNudge(series, fpStr) {
+        var base = deepCloneChartSeries(series);
+        if (isDefaultFactorFingerprint(fpStr)) return base;
+        var h = factorHash(fpStr);
+        return base.map(function (s) {
+          var values = s.values.map(function (v, vi) {
+            if (v == null) return null;
+            var n1 = (factorHash(fpStr + "|ln|" + s.num + "|" + vi) - 0.5) * 10;
+            var n2 = (h - 0.5) * 5;
+            return Math.round(Math.min(99, Math.max(58, v + n1 + n2)));
+          });
+          return Object.assign({}, s, { values: values });
+        });
+      }
+
+      function snapshotLineBaselineFromRace() {
+        if (window.CHART_SERIES && window.CHART_SERIES.length) {
+          window.__hrLineBaseline = deepCloneChartSeries(window.CHART_SERIES);
+        }
+      }
+
+      function refreshSpeedLineForFactors() {
+        if (!window.__hrMainChart || !window.__hrLineBaseline) return;
+        var root = document.getElementById("conditional-factors-speed");
+        var fp = factorFingerprintFromRoot(root);
+        var next = applyLineFactorNudge(window.__hrLineBaseline, fp);
+        window.__hrMainChart.setSeries(next);
+        next.forEach(function (s) {
+          var cb = document.getElementById("chart-line-h" + s.num);
+          if (cb) window.__hrMainChart.setVisible(s.num, cb.checked);
+        });
+        var me = document.getElementById("metric-speed");
+        if (me) window.__hrMainChart.setMetric(me.value);
+      }
+
+      function refreshSpeedFactors() {
+        var vizEl = document.getElementById("viz-speed");
+        var viz = vizEl ? vizEl.value : "Line chart";
+        if (viz === "Line chart") refreshSpeedLineForFactors();
+        else refreshSpeedPanel();
+      }
+
       function metricKey(m) {
         if (activeBarWidths[m]) return m;
         return "Speed figure";
       }
 
-      function mockNumeric(metric, horseIdx, salt) {
+      function mockNumeric(metric, horseIdx, salt, fpStr) {
         var s = 0;
         var i;
         for (i = 0; i < metric.length; i++) s += metric.charCodeAt(i);
-        return 62 + ((s + horseIdx * 17 + salt * 11) % 34);
+        var base = 62 + ((s + horseIdx * 17 + salt * 11) % 34);
+        if (!fpStr || isDefaultFactorFingerprint(fpStr)) return base;
+        var adj = Math.round((factorHash(fpStr + "|tbl|" + horseIdx + "|" + salt) - 0.5) * 14);
+        return Math.min(95, Math.max(45, base + adj));
       }
 
       function banner(metric, viz) {
@@ -2464,7 +3127,9 @@
         );
       }
 
-      function htmlMockTable(metric) {
+      function htmlMockTable(metric, factorsRoot) {
+        var fr = factorsRoot || document.getElementById("conditional-factors-speed");
+        var fp = factorFingerprintFromRoot(fr);
         var cols = ["R-5", "R-4", "R-3", "R-2", "R-1", "Today"];
         var cap =
           "Sample values — " +
@@ -2481,7 +3146,7 @@
         mockHorseList.forEach(function (horse, hi) {
           h += "<tr><td>" + horse.num + " \u00b7 " + horse.name + "</td>";
           cols.forEach(function (_c, ci) {
-            h += "<td>" + mockNumeric(metric, hi, ci + 1) + "</td>";
+            h += "<td>" + mockNumeric(metric, hi, ci + 1, fp) + "</td>";
           });
           h += "</tr>";
         });
@@ -2489,13 +3154,16 @@
         return h;
       }
 
-      function htmlMockBars(metric) {
-        var widths = activeBarWidths[metric] || activeBarWidths["Speed figure"];
+      function htmlMockBars(metric, factorsRoot) {
+        var fr = factorsRoot || document.getElementById("conditional-factors-speed");
+        var fp = factorFingerprintFromRoot(fr);
+        var raw = activeBarWidths[metric] || activeBarWidths["Speed figure"];
+        var widths = applyBarFactorJitter(raw, fp);
         var h = '<div class="bar-chart-body" style="padding-top:0.35rem">';
         h += '<div class="average-label">' + metric + ' — mock scale 0–100</div>';
         h += '<div class="horse-scroll" role="list">';
         mockHorseList.forEach(function (horse, hi) {
-          var pct = widths[hi] !== undefined ? widths[hi] : Math.min(94, Math.max(18, mockNumeric(metric, hi, 99)));
+          var pct = widths[hi] !== undefined ? widths[hi] : Math.min(94, Math.max(18, mockNumeric(metric, hi, 99, fp)));
           h += '<div class="horse-row" role="listitem">';
           h += '<div class="horse-meta">';
           h += '<label class="horse-label"><span class="horse-num">' + horse.num + '</span><span class="horse-name">' + horse.name + '</span></label>';
@@ -2568,12 +3236,16 @@
         var chartEl = document.getElementById(pfx + "-chart");
         if (!trig || !panel || !chartEl || typeof window.HrLineChart !== "function") return null;
 
-        /* Instantiate dynamic chart */
+        var cw = vis.closest(".dash-widget--custom");
+        var facRoot = cw ? cw.querySelector(".conditional-factors") : null;
+        var fp = factorFingerprintFromRoot(facRoot);
+        var seriesForChart = applyLineFactorNudge(deepCloneChartSeries(window.CHART_SERIES || []), fp);
+
         var chart = new window.HrLineChart(chartEl, {
-          series: window.CHART_SERIES
+          series: seriesForChart
         });
 
-        var series = window.CHART_SERIES || [];
+        var series = seriesForChart;
 
         function countV() {
           return series.reduce(function (n, s) {
@@ -2605,15 +3277,20 @@
         return chart;
       }
 
-      function buildAltVizHtml(metric, viz, uid) {
+      function buildAltVizHtml(metric, viz, uid, factorsRootEl) {
         var m = metricKey(metric);
+        var fr =
+          factorsRootEl ||
+          (uid
+            ? document.getElementById("conditional-factors-cv-" + uid)
+            : document.getElementById("conditional-factors-speed"));
         var inner;
         switch (viz) {
           case "Bar chart":
-            inner = htmlMockBars(m);
+            inner = htmlMockBars(m, fr);
             break;
           case "Table":
-            inner = htmlMockTable(m);
+            inner = htmlMockTable(m, fr);
             break;
           case "Line chart":
             inner = htmlMockMiniLine(m, uid);
@@ -2631,12 +3308,18 @@
         if (!sel || !label || !body) return;
         var m = metricKey(sel.value);
         var widths = activeBarWidths[m];
+        var facRoot = document.getElementById("conditional-factors-compare");
+        var fp = factorFingerprintFromRoot(facRoot);
+        var jittered = applyBarFactorJitter(widths, fp);
         label.textContent =
-          "Field average (" + m.toLowerCase() + ") — mock scale 0–100 · wireframe";
+          "Field average (" +
+          m.toLowerCase() +
+          ") — mock scale 0–100 · wireframe" +
+          (isDefaultFactorFingerprint(fp) ? "" : " · factors on");
         var fills = body.querySelectorAll(".bar-fill");
         var i;
-        for (i = 0; i < fills.length && i < widths.length; i++) {
-          fills[i].style.width = widths[i] + "%";
+        for (i = 0; i < fills.length && i < jittered.length; i++) {
+          fills[i].style.width = jittered[i] + "%";
         }
       }
 
@@ -2654,14 +3337,14 @@
         if (viz === "Line chart") {
           lineBox.hidden = false;
           alt.hidden = true;
-          if (window.__hrMainChart) window.__hrMainChart.setMetric(metric);
+          refreshSpeedLineForFactors();
           if (xCap) xCap.textContent =
             "Horizontal axis = ten most recent races. Higher on chart = stronger mock " +
             metric.toLowerCase() + ".";
         } else {
           lineBox.hidden = true;
           alt.hidden = false;
-          alt.innerHTML = buildAltVizHtml(metric, viz);
+          alt.innerHTML = buildAltVizHtml(metric, viz, null, document.getElementById("conditional-factors-speed"));
         }
       }
 
@@ -2677,7 +3360,8 @@
           if (_chart) { try { _chart.destroy(); } catch (e) {} _chart = null; }
           var viz    = vSel.value;
           var metric = metricKey(mSel.value);
-          vis.innerHTML  = buildAltVizHtml(metric, viz, uid);
+          var facEl  = wrap.querySelector(".conditional-factors");
+          vis.innerHTML  = buildAltVizHtml(metric, viz, uid, facEl);
           vis.style.overflow = viz === "Line chart" ? "visible" : "auto";
           if (viz === "Line chart") {
             _chart = wireCustomLinePicker(vis, uid);
@@ -2696,6 +3380,23 @@
         rebuild();
         wrap.__hrRebuild = rebuild;
       }
+
+      var dashRootEl = document.getElementById("dashboard-root");
+      if (dashRootEl) {
+        dashRootEl.addEventListener("change", function (e) {
+          var t = e.target;
+          if (!t) return;
+          if (t.tagName === "SELECT" && t.classList.contains("factor-select")) {
+            var cf = t.closest(".conditional-factors");
+            notifyConditionalFactorsChanged(cf);
+          }
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        document.querySelectorAll(".factor-multi-shell.is-open").forEach(closeFactorMultiShell);
+      });
 
       var mb = document.getElementById("metric-bars");
       if (mb) {
@@ -2724,6 +3425,11 @@
         raceSelectEl.addEventListener("change", syncRaceFromToolbar);
       }
       applyRaceDataSlot(0);
+
+      if (typeof window.__hrWireFactorMultiInRoot === "function") {
+        var hp = document.getElementById("handicapping-page");
+        window.__hrWireFactorMultiInRoot(hp || document.body);
+      }
 
       window.__wireHrCustomView = wireCustomViewDashWidget;
     })();
