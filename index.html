@@ -155,6 +155,7 @@
       display: flex;
       flex-direction: column;
       min-height: calc(100vh - var(--nav-height) - var(--race-row-height));
+      scroll-margin-top: calc(var(--nav-height) + 0.5rem);
     }
 
     .dashboard-root {
@@ -178,7 +179,7 @@
     .dashboard-root[data-layout="split-h"] {
       grid-template-columns: minmax(140px, 0.5fr) 10px minmax(140px, 0.5fr);
       grid-template-rows: minmax(340px, 1fr);
-      grid-template-areas: "left col-resizer right";
+      grid-template-areas: "left col-resizer-top right";
     }
 
     .dashboard-root[data-layout="split-v"] {
@@ -195,12 +196,20 @@
       grid-template-columns: minmax(140px, 0.5fr) 10px minmax(140px, 0.5fr);
       grid-template-rows: minmax(200px, 1fr) minmax(300px, 1fr);
       grid-template-areas:
-        "left col-resizer right"
+        "left col-resizer-top right"
         "wide wide wide";
     }
 
+    /* Four views: top row matches split-h3; bottom row split with same column ratio as top */
+    .dashboard-root[data-layout="split-h4"] {
+      grid-template-columns: minmax(140px, 0.5fr) 10px minmax(140px, 0.5fr);
+      grid-template-rows: minmax(200px, 1fr) minmax(260px, 1fr);
+      grid-template-areas:
+        "left col-resizer-top right"
+        "wide-left col-resizer-bottom wide-right";
+    }
+
     .dash-col-resizer {
-      grid-area: col-resizer;
       z-index: 6;
       justify-self: center;
       width: 10px;
@@ -241,6 +250,14 @@
 
     .dash-col-resizer:focus:not(:focus-visible) {
       outline: none;
+    }
+
+    .dash-col-resizer-top {
+      grid-area: col-resizer-top;
+    }
+
+    .dash-col-resizer-bottom {
+      grid-area: col-resizer-bottom;
     }
 
     .snap-hints {
@@ -343,6 +360,34 @@
       height: calc(44% - 5px);
     }
 
+    .dashboard-root[data-layout="split-h4"] .snap-hint[data-slot="left"] {
+      top: 0;
+      left: 0;
+      width: calc(50% - 5px);
+      height: calc(56% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h4"] .snap-hint[data-slot="right"] {
+      top: 0;
+      right: 0;
+      width: calc(50% - 5px);
+      height: calc(56% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h4"] .snap-hint[data-slot="wide-left"] {
+      bottom: 0;
+      left: 0;
+      width: calc(50% - 5px);
+      height: calc(44% - 5px);
+    }
+
+    .dashboard-root[data-layout="split-h4"] .snap-hint[data-slot="wide-right"] {
+      bottom: 0;
+      right: 0;
+      width: calc(50% - 5px);
+      height: calc(44% - 5px);
+    }
+
     .dashboard-root.is-dragging-widget .snap-hint.is-target {
       display: block;
       border-color: #292929;
@@ -368,38 +413,52 @@
       box-shadow: 0 12px 36px rgb(0 0 0 / 0.24);
     }
 
-    /* Full-width lower row: enough height and scroll for controls + chart; avoid clipping */
-    .dash-widget[data-slot="wide"] {
+    /* Full-width lower row (and split bottom row): enough height and scroll for controls + chart */
+    .dash-widget[data-slot="wide"],
+    .dash-widget[data-slot="wide-left"],
+    .dash-widget[data-slot="wide-right"] {
       min-height: 0;
     }
 
-    .dash-widget[data-slot="wide"] .dash-widget-body {
+    .dash-widget[data-slot="wide"] .dash-widget-body,
+    .dash-widget[data-slot="wide-left"] .dash-widget-body,
+    .dash-widget[data-slot="wide-right"] .dash-widget-body {
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
     }
 
-    .dash-widget[data-slot="wide"] .chart-module.panel {
+    .dash-widget[data-slot="wide"] .chart-module.panel,
+    .dash-widget[data-slot="wide-left"] .chart-module.panel,
+    .dash-widget[data-slot="wide-right"] .chart-module.panel {
       flex: 1 1 auto;
       min-height: max(280px, 30vh);
     }
 
-    .dash-widget[data-slot="wide"] .chart-placeholder {
+    .dash-widget[data-slot="wide"] .chart-placeholder,
+    .dash-widget[data-slot="wide-left"] .chart-placeholder,
+    .dash-widget[data-slot="wide-right"] .chart-placeholder {
       flex: 1 1 auto;
       min-height: 260px;
     }
 
-    .dash-widget[data-slot="wide"] .speed-chart-wrap {
+    .dash-widget[data-slot="wide"] .speed-chart-wrap,
+    .dash-widget[data-slot="wide-left"] .speed-chart-wrap,
+    .dash-widget[data-slot="wide-right"] .speed-chart-wrap {
       flex: 1 1 auto;
       min-height: min(360px, 45vh);
     }
 
-    .dash-widget[data-slot="wide"] .speed-chart-plot {
+    .dash-widget[data-slot="wide"] .speed-chart-plot,
+    .dash-widget[data-slot="wide-left"] .speed-chart-plot,
+    .dash-widget[data-slot="wide-right"] .speed-chart-plot {
       flex: 1 1 auto;
       min-height: var(--speed-chart-plot-min-h);
     }
 
-    .dash-widget[data-slot="wide"] .speed-chart-wrap .axis-caption-x {
+    .dash-widget[data-slot="wide"] .speed-chart-wrap .axis-caption-x,
+    .dash-widget[data-slot="wide-left"] .speed-chart-wrap .axis-caption-x,
+    .dash-widget[data-slot="wide-right"] .speed-chart-wrap .axis-caption-x {
       padding: 0.25rem 0.15rem 0.45rem;
       margin-bottom: 0.15rem;
       font-size: 10px;
@@ -537,10 +596,17 @@
       line-height: 1.35;
     }
 
-    .dash-widget--custom .factors-block {
+    .dash-widget--custom .factors-block.factors-details {
+      flex-shrink: 0;
       margin-top: 0;
       padding: 0.65rem 0.85rem 0.75rem;
       border-top: none;
+      border-bottom: 1px dashed var(--border-subtle);
+      background: var(--bg-elevated);
+    }
+
+    .dash-widget--custom details.factors-details > .factors-details-summary {
+      padding-top: 0.15rem;
     }
 
     .race-toolbar label {
@@ -578,6 +644,20 @@
           "left"
           "right"
           "wide";
+      }
+
+      .dashboard-root[data-layout="split-h4"] {
+        grid-template-columns: 1fr !important;
+        grid-template-rows:
+          minmax(180px, 1fr)
+          minmax(180px, 1fr)
+          minmax(220px, auto)
+          minmax(220px, auto);
+        grid-template-areas:
+          "left"
+          "right"
+          "wide-left"
+          "wide-right";
       }
 
       .dash-col-resizer {
@@ -647,11 +727,449 @@
       font-size: 12px;
     }
 
+    /* ── Metric selection module (families, hero row, related, browser) ── */
+    .metric-module {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 0.35rem 0 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 0.35rem;
+    }
+
+    .bar-panel .metric-module {
+      padding-top: 0.15rem;
+    }
+
+    .metric-family-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      overflow-x: visible;
+      padding: 0.1rem 0 0.15rem;
+      margin: 0 -0.15rem;
+    }
+
+    @media (max-width: 720px) {
+      .metric-family-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scroll-snap-type: x proximity;
+      }
+    }
+
+    .metric-family-chip {
+      flex: 0 0 auto;
+      scroll-snap-align: start;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.28rem 0.65rem;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: var(--bg-panel);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease,
+        box-shadow 0.12s ease;
+    }
+
+    .metric-family-chip:hover {
+      border-color: #999;
+      color: var(--text);
+    }
+
+    .metric-family-chip.is-active {
+      background: linear-gradient(180deg, #3a3a3a 0%, #2c2c2c 100%);
+      color: #fafafa;
+      border-color: #222;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+    }
+
+    .metric-selected-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0;
+    }
+
+    .metric-nav {
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .metric-nav:hover {
+      background: var(--bg-panel);
+      border-color: #888;
+    }
+
+    .metric-nav:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .metric-current {
+      flex: 1 1 160px;
+      min-width: 0;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.45rem 0.65rem;
+      background: var(--bg-panel);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+    }
+
+    .metric-current:hover {
+      border-color: #666;
+    }
+
+    .metric-current-label {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metric-browse-all {
+      flex: 0 0 auto;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.65rem;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .metric-browse-all:hover {
+      border-color: #888;
+      color: var(--text);
+    }
+
+    .metric-fav {
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 1.15rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--text-muted);
+      opacity: 0.85;
+    }
+
+    .metric-fav:hover {
+      color: #b45309;
+      opacity: 1;
+    }
+
+    .metric-fav.is-favorite {
+      color: #b45309;
+      opacity: 1;
+    }
+
+    .metric-related-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      min-height: 1.5rem;
+    }
+
+    .metric-related-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-placeholder);
+      margin-right: 0.15rem;
+    }
+
+    .metric-related-chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.15rem 0.5rem;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-elevated);
+      color: var(--text);
+      cursor: pointer;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric-related-chip:hover {
+      border-color: #777;
+    }
+
+    .added-view-controls--split {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+
+    /* Match main chart panel: view type top-right, metric block full width / left-aligned */
+    .custom-view-toolbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .custom-view-toolbar-lead {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .dash-widget--custom .added-view-controls--split .metric-module {
+      width: 100%;
+      align-self: stretch;
+      text-align: left;
+    }
+
+    .dash-widget--custom .metric-family-chips,
+    .dash-widget--custom .metric-selected-row,
+    .dash-widget--custom .metric-related-row {
+      justify-content: flex-start;
+    }
+
+    /* Full metric browser overlay */
+    .metric-browser {
+      position: fixed;
+      inset: 0;
+      z-index: 8000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .metric-browser[hidden] {
+      display: none !important;
+    }
+
+    .metric-browser-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgb(0 0 0 / 0.4);
+      backdrop-filter: blur(2px);
+    }
+
+    .metric-browser-sheet {
+      position: relative;
+      width: min(100%, 520px);
+      max-height: min(82vh, 640px);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -12px 48px rgb(0 0 0 / 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    @media (min-width: 560px) {
+      .metric-browser {
+        align-items: center;
+        padding: 1rem;
+      }
+
+      .metric-browser-sheet {
+        border-radius: 12px;
+        max-height: min(85vh, 680px);
+      }
+    }
+
+    .metric-browser-head {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .metric-browser-search {
+      flex: 1;
+      min-width: 0;
+      padding: 0.45rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: var(--bg-panel);
+      color: var(--text);
+    }
+
+    .metric-browser-close {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.65rem;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-panel);
+      cursor: pointer;
+    }
+
+    .metric-browser-body {
+      overflow-y: auto;
+      padding: 0.5rem 0.75rem 1rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .metric-browser-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-placeholder);
+      margin: 0.75rem 0 0.35rem;
+    }
+
+    .metric-browser-section-title:first-child {
+      margin-top: 0.15rem;
+    }
+
+    .metric-browser-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin: 0.65rem 0 0.3rem;
+    }
+
+    .metric-browser-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 0.4rem 0.5rem;
+      margin: 0.1rem 0;
+      font-size: 13px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .metric-browser-item:hover {
+      background: rgb(0 0 0 / 0.06);
+    }
+
+    .metric-browser-item.is-hidden {
+      display: none;
+    }
+
+    .metric-browser-item .tag {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-placeholder);
+      margin-left: 0.35rem;
+    }
+
     /* Conditional factors */
     .factors-block {
       margin-top: 0.65rem;
       padding-top: 0.65rem;
       border-top: 1px dashed var(--border-subtle);
+    }
+
+    details.factors-block.factors-details {
+      margin-top: 0.65rem;
+      padding-top: 0;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .factors-details-summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.3rem 0 0.4rem;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .factors-details-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .factors-details-summary::marker {
+      content: "";
+    }
+
+    .factors-details-summary:focus {
+      outline: 2px solid #888;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .factors-details-summary:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    .factors-details-summary .factors-label {
+      margin-bottom: 0;
+    }
+
+    .factors-details-hint {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-placeholder);
+      flex-shrink: 0;
+    }
+
+    .factors-collapse-when-open {
+      display: none;
+    }
+
+    details[open].factors-details > .factors-details-summary .factors-collapse-when-open {
+      display: inline;
+    }
+
+    details[open].factors-details > .factors-details-summary .factors-collapse-when-closed {
+      display: none;
+    }
+
+    .factors-details-body {
+      padding-top: 0.25rem;
     }
 
     .factors-label {
@@ -1090,6 +1608,17 @@
       background: rgb(0 0 0 / 0.03);
     }
 
+    .mock-wire-table tbody tr:has(.horse-meta input:not(:checked)) td {
+      opacity: 0.42;
+    }
+
+    .mock-horse-toggle-hint {
+      margin: 0;
+      padding: 0 1rem 0.35rem;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
 
     .added-view-visual {
       flex: 1;
@@ -1102,9 +1631,10 @@
 
     .dash-widget--custom .added-view-canvas {
       flex: 1;
-      min-height: min(520px, 72vh);
+      min-height: 0;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* Extra vertical room for line charts inside user-added views */
@@ -1377,10 +1907,11 @@
   <header class="site-header" aria-label="Primary">
     <div class="logo-block" aria-hidden="true">Logo</div>
     <nav class="main-nav" aria-label="Main menu">
-      <a href="#" class="is-active">Lorem ipsum dolor</a>
-      <a href="#">Sit amet consectetur</a>
-      <a href="#">Adipiscing elit sed</a>
-      <a href="#">Eiusmod tempor</a>
+      <a href="#handicapping-page" class="is-active">Handicap</a>
+      <a href="#">Bookmarked</a>
+      <a href="#">Quick PP Download</a>
+      <a href="#">My Account</a>
+      <a href="#">Learn</a>
     </nav>
     <div class="user-avatar" role="img" aria-label="Account"></div>
   </header>
@@ -1411,8 +1942,11 @@
         <div class="snap-hint" data-slot="top"></div>
         <div class="snap-hint" data-slot="bottom"></div>
         <div class="snap-hint" data-slot="wide"></div>
+        <div class="snap-hint" data-slot="wide-left"></div>
+        <div class="snap-hint" data-slot="wide-right"></div>
       </div>
-      <button type="button" class="dash-col-resizer" id="dash-col-resizer" aria-label="Drag to resize columns" title="Drag to widen or narrow the panels"></button>
+      <button type="button" class="dash-col-resizer dash-col-resizer-top" id="dash-col-resizer" aria-label="Drag to resize top columns" title="Drag to widen or narrow the columns (top and bottom rows)"></button>
+      <button type="button" class="dash-col-resizer dash-col-resizer-bottom" id="dash-col-resizer-bottom" aria-label="Drag to resize bottom columns" title="Drag to widen or narrow the columns (top and bottom rows)" hidden></button>
       <div class="dash-widget" id="widget-bars" data-slot="left" style="grid-area: left">
         <header class="dash-widget-header">
           <span class="dash-widget-grip" role="button" tabindex="0" aria-label="Drag to rearrange panels" title="Drag — swap columns; from two-up drag down to stack; when stacked drag right edge to split; with three views drag to move between full-width lower row and columns"></span>
@@ -1426,18 +1960,27 @@
                 <div>
                   <p class="panel-subtitle">Toggle horses to include or exclude from the chart.</p>
                 </div>
-                <div class="control-cluster">
-                  <label class="inline-label" for="metric-bars">Metric</label>
-                  <select id="metric-bars" class="wire-select wire-select--sm" aria-label="Bar chart metric">
-                    <option selected>Speed figure</option>
-                    <option>Early pace</option>
-                    <option>Class rating</option>
-                    <option>Finish time index</option>
-                  </select>
-                </div>
               </div>
-              <div class="factors-block">
-                <span class="factors-label">Conditional factors</span>
+              <div class="metric-module" id="metric-module-compare" data-metric-panel="compare">
+                <input type="hidden" id="metric-bars" class="metric-value-input" value="Speed figure" aria-hidden="true" />
+                <div class="metric-family-chips" role="tablist" aria-label="Metric families"></div>
+                <div class="metric-selected-row">
+                  <button type="button" class="metric-nav metric-nav--prev" aria-label="Previous metric in family">‹</button>
+                  <button type="button" class="metric-current" aria-haspopup="dialog" aria-label="Open metric browser">
+                    <span class="metric-current-label">Speed figure</span>
+                  </button>
+                  <button type="button" class="metric-nav metric-nav--next" aria-label="Next metric in family">›</button>
+                  <button type="button" class="metric-browse-all">All metrics</button>
+                  <button type="button" class="metric-fav" aria-label="Favorite this metric" title="Favorite" aria-pressed="false">☆</button>
+                </div>
+                <div class="metric-related-row" aria-label="Related metrics"></div>
+              </div>
+              <details class="factors-block factors-details" open>
+                <summary class="factors-details-summary">
+                  <span class="factors-label">Conditional factors</span>
+                  <span class="factors-details-hint"><span class="factors-collapse-when-closed">Expand</span><span class="factors-collapse-when-open">Collapse</span></span>
+                </summary>
+                <div class="factors-details-body">
                 <p class="factors-hint">Selections reshape mock values for this panel. Multi-select: open a list to choose options; click outside to close.</p>
                 <div class="conditional-factors" id="conditional-factors-compare">
                   <div class="factor-fields-grid">
@@ -1525,7 +2068,8 @@
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              </details>
             </div>
       <div class="bar-chart-body" id="bar-chart-body">
         <div class="average-label" id="bar-average-label">Field average (speed figure) — mock scale 0–100</div>
@@ -1691,15 +2235,6 @@
                   <p class="panel-subtitle" id="speed-panel-subtitle">Each point is one historical race, left to right (Race 1 = earliest shown).</p>
                 </div>
                 <div class="control-cluster">
-                  <label class="inline-label" for="metric-speed">Metric</label>
-                  <select id="metric-speed" class="wire-select wire-select--sm" aria-label="Chart metric">
-                    <option selected>Speed figure</option>
-                    <option>Early pace</option>
-                    <option>Class rating</option>
-                    <option>Finish time index</option>
-                  </select>
-                </div>
-                <div class="control-cluster">
                   <label class="inline-label" for="viz-speed">View type</label>
                   <select id="viz-speed" class="wire-select wire-select--sm" aria-label="Speed panel view type">
                     <option selected>Line chart</option>
@@ -1708,8 +2243,26 @@
                   </select>
                 </div>
               </div>
-              <div class="factors-block">
-                <span class="factors-label">Conditional factors</span>
+              <div class="metric-module" id="metric-module-speed" data-metric-panel="chart">
+                <input type="hidden" id="metric-speed" class="metric-value-input" value="Speed figure" aria-hidden="true" />
+                <div class="metric-family-chips" role="tablist" aria-label="Metric families"></div>
+                <div class="metric-selected-row">
+                  <button type="button" class="metric-nav metric-nav--prev" aria-label="Previous metric in family">‹</button>
+                  <button type="button" class="metric-current" aria-haspopup="dialog" aria-label="Open metric browser">
+                    <span class="metric-current-label">Speed figure</span>
+                  </button>
+                  <button type="button" class="metric-nav metric-nav--next" aria-label="Next metric in family">›</button>
+                  <button type="button" class="metric-browse-all">All metrics</button>
+                  <button type="button" class="metric-fav" aria-label="Favorite this metric" title="Favorite" aria-pressed="false">☆</button>
+                </div>
+                <div class="metric-related-row" aria-label="Related metrics"></div>
+              </div>
+              <details class="factors-block factors-details" open>
+                <summary class="factors-details-summary">
+                  <span class="factors-label">Conditional factors</span>
+                  <span class="factors-details-hint"><span class="factors-collapse-when-closed">Expand</span><span class="factors-collapse-when-open">Collapse</span></span>
+                </summary>
+                <div class="factors-details-body">
                 <p class="factors-hint">Selections reshape mock values for this panel. Multi-select: open a list to choose options; click outside to close.</p>
                 <div class="conditional-factors" id="conditional-factors-speed">
                   <div class="factor-fields-grid">
@@ -1797,7 +2350,8 @@
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              </details>
             </div>
         <div class="chart-placeholder" aria-label="Speed by race line chart">
           <div class="horse-picker-shell">
@@ -1846,6 +2400,16 @@
         </div>
       </section>
         </div>
+      </div>
+    </div>
+    <div id="metric-browser-root" class="metric-browser" hidden aria-hidden="true">
+      <div class="metric-browser-backdrop" data-metric-browser-dismiss></div>
+      <div class="metric-browser-sheet" role="dialog" aria-modal="true" aria-label="Browse all metrics">
+        <div class="metric-browser-head">
+          <input type="search" class="metric-browser-search" id="metric-browser-search" placeholder="Search metrics…" autocomplete="off" aria-label="Search metrics" />
+          <button type="button" class="metric-browser-close" id="metric-browser-close">Close</button>
+        </div>
+        <div class="metric-browser-body" id="metric-browser-catalog"></div>
       </div>
     </div>
   </div>
@@ -2339,7 +2903,7 @@
       var root = document.getElementById("dashboard-root");
       if (!root) return;
 
-      var MAX_WIDGETS = 3;
+      var MAX_WIDGETS = 4;
       var MAIN_BAND = 0.62;
       var MID_BAND = 0.78;
       var H3_TOP_FRAC = 0.56;
@@ -2351,6 +2915,7 @@
       }
 
       var resizer = document.getElementById("dash-col-resizer");
+      var resizerBottom = document.getElementById("dash-col-resizer-bottom");
       var colDrag = null;
       var winResizeTimer = null;
 
@@ -2366,12 +2931,17 @@
         var layout = root.dataset.layout;
         var rw = root.getBoundingClientRect().width;
         var narrow = rw <= 960;
-        var isSplit = layout === "split-h" || layout === "split-h3";
+        var isSplit =
+          layout === "split-h" ||
+          layout === "split-h3" ||
+          layout === "split-h4";
         if (!isSplit || narrow) {
           resizer.hidden = true;
+          if (resizerBottom) resizerBottom.hidden = true;
           root.style.gridTemplateColumns = "";
         } else {
           resizer.hidden = false;
+          if (resizerBottom) resizerBottom.hidden = layout !== "split-h4";
           applyColRatio(parseFloat(root.dataset.colRatio || "0.5", 10));
         }
       }
@@ -2402,7 +2972,17 @@
       function onColResizerPointerDown(e) {
         if (e.button !== 0 || !e.isPrimary) return;
         var layout = root.dataset.layout;
-        if (layout !== "split-h" && layout !== "split-h3") return;
+        var fromBottom = resizerBottom && e.currentTarget === resizerBottom;
+        if (fromBottom) {
+          if (layout !== "split-h4") return;
+        } else {
+          if (
+            layout !== "split-h" &&
+            layout !== "split-h3" &&
+            layout !== "split-h4"
+          )
+            return;
+        }
         if (root.getBoundingClientRect().width <= 960) return;
         e.preventDefault();
         e.stopPropagation();
@@ -2428,6 +3008,19 @@
         if (n <= 1) return "full";
 
         var colSplit = parseFloat(root.dataset.colRatio || "0.5", 10);
+
+        if (layout === "split-h4") {
+          if (r.width <= 960) {
+            if (ny < 0.25) return "left";
+            if (ny < 0.5) return "right";
+            if (ny < 0.75) return "wide-left";
+            return "wide-right";
+          }
+          if (ny >= H3_TOP_FRAC) {
+            return nx < colSplit ? "wide-left" : "wide-right";
+          }
+          return nx < colSplit ? "left" : "right";
+        }
 
         if (layout === "split-h3") {
           if (r.width <= 960) {
@@ -2476,6 +3069,23 @@
           return;
         }
 
+        if (n === 4) {
+          if (root.dataset.layout !== "split-h4") setLayout("split-h4");
+          var cur4 = el.dataset.slot;
+          if (newSlot === cur4 || newSlot === "full") return;
+          if (
+            newSlot !== "left" &&
+            newSlot !== "right" &&
+            newSlot !== "wide-left" &&
+            newSlot !== "wide-right"
+          )
+            return;
+          var o4 = findWidgetBySlot(newSlot);
+          if (o4 && o4 !== el) setSlot(o4, cur4);
+          setSlot(el, newSlot);
+          return;
+        }
+
         if (n === 3) {
           if (root.dataset.layout !== "split-h3") setLayout("split-h3");
           var cur = el.dataset.slot;
@@ -2520,9 +3130,55 @@
           applySolitaryLayout();
           return;
         }
+        if (n === 3) {
+          var layout3 = root.dataset.layout;
+          var wl = findWidgetBySlot("wide-left");
+          var wr = findWidgetBySlot("wide-right");
+          if (layout3 === "split-h4" || wl || wr) {
+            setLayout("split-h3");
+            var l3 = findWidgetBySlot("left");
+            var r3 = findWidgetBySlot("right");
+            if (wl && !wr) setSlot(wl, "wide");
+            else if (wr && !wl) setSlot(wr, "wide");
+            else if (wl && wr) {
+              if (!l3 && r3) {
+                setSlot(wl, "left");
+                setSlot(wr, "wide");
+              } else if (l3 && !r3) {
+                setSlot(wr, "right");
+                setSlot(wl, "wide");
+              } else {
+                setSlot(wl, "wide");
+                setSlot(wr, "right");
+              }
+            }
+          }
+          return;
+        }
         if (n !== 2) return;
         var s0 = widgets[0].dataset.slot;
         var s1 = widgets[1].dataset.slot;
+        if (
+          s0 === "wide-left" ||
+          s0 === "wide-right" ||
+          s1 === "wide-left" ||
+          s1 === "wide-right"
+        ) {
+          setLayout("split-h");
+          function colKey2(s) {
+            if (s === "left") return 0;
+            if (s === "wide-left" || s === "top") return 1;
+            if (s === "right") return 2;
+            if (s === "wide-right" || s === "bottom") return 3;
+            return 4;
+          }
+          var sorted2 = widgets.slice().sort(function (a, b) {
+            return colKey2(a.dataset.slot) - colKey2(b.dataset.slot);
+          });
+          setSlot(sorted2[0], "left");
+          setSlot(sorted2[1], "right");
+          return;
+        }
         if (s0 === "wide" || s1 === "wide") {
           setLayout("split-v");
           var wideW = s0 === "wide" ? widgets[0] : widgets[1];
@@ -2619,7 +3275,7 @@
         b.disabled = n >= MAX_WIDGETS;
         b.title =
           n >= MAX_WIDGETS
-            ? "Remove a view to add another (maximum three)."
+            ? "Remove a view to add another (maximum four)."
             : "";
       }
 
@@ -2628,6 +3284,9 @@
 
       if (resizer) {
         resizer.addEventListener("pointerdown", onColResizerPointerDown);
+      }
+      if (resizerBottom) {
+        resizerBottom.addEventListener("pointerdown", onColResizerPointerDown);
       }
       window.addEventListener("resize", function () {
         clearTimeout(winResizeTimer);
@@ -2642,7 +3301,12 @@
         var v = viewCounter;
         var wrap = document.createElement("div");
         wrap.className = "dash-widget dash-widget--custom";
-        if (existing.length === 2) {
+        if (existing.length === 3) {
+          setLayout("split-h4");
+          var widePrev = findWidgetBySlot("wide");
+          if (widePrev) setSlot(widePrev, "wide-left");
+          setSlot(wrap, "wide-right");
+        } else if (existing.length === 2) {
           setLayout("split-h3");
           var a = existing[0];
           var b = existing[1];
@@ -2682,22 +3346,9 @@
           '">&times;</button>' +
           "</header>" +
           '<div class="dash-widget-body">' +
-          '<div class="added-view-controls">' +
-          '<div class="control-cluster">' +
-          '<label class="inline-label" for="added-metric-' +
-          v +
-          '">Metric</label>' +
-          '<select id="added-metric-' +
-          v +
-          '" class="wire-select wire-select--sm" aria-label="Metric for custom view ' +
-          v +
-          '">' +
-          "<option>Speed figure</option>" +
-          "<option>Early pace</option>" +
-          "<option>Class rating</option>" +
-          "<option>Finish time index</option>" +
-          "</select>" +
-          "</div>" +
+          '<div class="added-view-controls added-view-controls--split">' +
+          '<div class="custom-view-toolbar">' +
+          '<div class="custom-view-toolbar-lead" aria-hidden="true"></div>' +
           '<div class="control-cluster">' +
           '<label class="inline-label" for="added-viz-' +
           v +
@@ -2711,16 +3362,36 @@
           "<option>Bar chart</option>" +
           "<option>Table</option>" +
           "</select>" +
+          "</div></div>" +
+          '<div class="metric-module" data-metric-custom="1">' +
+          '<input type="hidden" id="added-metric-' +
+          v +
+          '" class="metric-value-input" value="Speed figure" />' +
+          '<div class="metric-family-chips" role="tablist" aria-label="Metric families"></div>' +
+          '<div class="metric-selected-row">' +
+          '<button type="button" class="metric-nav metric-nav--prev" aria-label="Previous metric in family">‹</button>' +
+          '<button type="button" class="metric-current" aria-haspopup="dialog" aria-label="Open metric browser">' +
+          '<span class="metric-current-label">Speed figure</span></button>' +
+          '<button type="button" class="metric-nav metric-nav--next" aria-label="Next metric in family">›</button>' +
+          '<button type="button" class="metric-browse-all">All metrics</button>' +
+          '<button type="button" class="metric-fav" aria-label="Favorite this metric" title="Favorite" aria-pressed="false">☆</button>' +
           "</div>" +
-          "</div>" +
-          '<div class="added-view-canvas">' +
-          '<div class="added-view-visual" aria-live="polite"></div>' +
-          "</div>" +
-          '<div class="factors-block">' +
+          '<div class="metric-related-row" aria-label="Related metrics"></div>' +
+          "</div></div>" +
+          '<details class="factors-block factors-details" open>' +
+          '<summary class="factors-details-summary">' +
           '<span class="factors-label">Conditional factors</span>' +
+          '<span class="factors-details-hint">' +
+          '<span class="factors-collapse-when-closed">Expand</span>' +
+          '<span class="factors-collapse-when-open">Collapse</span>' +
+          "</span></summary>" +
+          '<div class="factors-details-body">' +
           (typeof window.__hrBuildConditionalFactorsMarkup === "function"
             ? window.__hrBuildConditionalFactorsMarkup("cv-" + v)
             : "") +
+          "</div></details>" +
+          '<div class="added-view-canvas">' +
+          '<div class="added-view-visual" aria-live="polite"></div>' +
           "</div>" +
           "</div>";
         return wrap;
@@ -2736,6 +3407,10 @@
           if (typeof window.__wireHrCustomView === "function") {
             window.__wireHrCustomView(w);
           }
+          if (typeof window.__hrAttachMetricModule === "function") {
+            var mm = w.querySelector(".metric-module");
+            if (mm) window.__hrAttachMetricModule(mm);
+          }
           if (typeof window.__hrWireFactorMultiInRoot === "function") {
             window.__hrWireFactorMultiInRoot(w);
           }
@@ -2745,19 +3420,132 @@
     })();
 
     (function () {
-      var BAR_WIDTHS_RACE1 = {
+      var BAR_WIDTHS_PRESET = {
         "Speed figure": [59, 76, 48, 87, 41, 93, 55, 67, 38, 82, 44, 71, 52, 64, 89, 46, 73, 58, 91, 42],
-        "Early pace": [68, 61, 74, 55, 79, 52, 70, 63, 81, 57, 66, 59, 72, 64, 58, 76, 53, 69, 62, 74],
-        "Class rating": [52, 84, 61, 73, 49, 88, 56, 79, 44, 91, 67, 58, 75, 62, 83, 51, 77, 65, 54, 86],
-        "Finish time index": [71, 54, 82, 60, 77, 48, 69, 85, 57, 63, 74, 52, 80, 66, 59, 73, 55, 88, 61, 64],
       };
 
-      var BAR_WIDTHS_RACE2 = {};
-      Object.keys(BAR_WIDTHS_RACE1).forEach(function (k) {
-        BAR_WIDTHS_RACE2[k] = BAR_WIDTHS_RACE1[k].slice(0, 9);
+      var HR_METRIC_FAMILIES = [
+        {
+          id: "speed",
+          label: "Speed",
+          metrics: [
+            "Speed figure",
+            "Average speed figure",
+            "Peak speed figure",
+            "Lowest speed figure",
+            "Final time",
+            "Race rating",
+          ],
+        },
+        {
+          id: "pace",
+          label: "Pace",
+          metrics: [
+            "Early pace figure",
+            "Middle pace figure",
+            "Late pace figure",
+            "Pace rating",
+            "Internal fraction time",
+            "First fraction time",
+            "Second fraction time",
+            "Third fraction time",
+            "Final fraction time",
+          ],
+        },
+        {
+          id: "position",
+          label: "Position",
+          metrics: [
+            "First call position",
+            "Second call position",
+            "Stretch position",
+            "Finish position",
+          ],
+        },
+        {
+          id: "lengths",
+          label: "Lengths",
+          metrics: [
+            "Lengths behind/ahead at first call",
+            "Lengths behind/ahead at second call",
+            "Lengths behind/ahead at stretch",
+            "Lengths behind/ahead at finish",
+          ],
+        },
+        {
+          id: "movement",
+          label: "Movement",
+          metrics: [
+            "Position gained from first to second call",
+            "Position gained from second call to stretch",
+            "Position gained from stretch to finish",
+            "Total positions gained during race",
+            "Total positions lost during race",
+            "Net movement from start to finish",
+            "Gain/loss in lengths from first call to finish",
+            "Gain/loss in lengths from stretch to finish",
+          ],
+        },
+        {
+          id: "outcome",
+          label: "Outcome",
+          metrics: [
+            "Finishing position",
+            "Wins",
+            "Places",
+            "Shows",
+            "In-the-money finish",
+            "Purse earned",
+            "Earnings per start",
+            "Win percentage",
+            "ITM percentage",
+            "Return on investment",
+          ],
+        },
+        { id: "class", label: "Class", metrics: ["Class level"] },
+        {
+          id: "form",
+          label: "Form",
+          metrics: [
+            "Days since last race",
+            "Number of starts this year",
+            "Number of career starts",
+          ],
+        },
+        {
+          id: "trainer",
+          label: "Trainer",
+          metrics: [
+            "Trainer win percentage",
+            "Trainer ITM percentage",
+            "Trainer ROI",
+            "Trainer record",
+            "Trainer-jockey combo win percentage",
+            "Trainer change",
+          ],
+        },
+        {
+          id: "jockey",
+          label: "Jockey",
+          metrics: [
+            "Jockey win percentage",
+            "Jockey ITM percentage",
+            "Jockey ROI",
+            "Jockey record",
+            "Jockey change",
+          ],
+        },
+      ];
+
+      var HR_METRIC_NAME_SET = {};
+      var HR_METRIC_TO_FAMILY = {};
+      HR_METRIC_FAMILIES.forEach(function (fam) {
+        fam.metrics.forEach(function (m) {
+          HR_METRIC_NAME_SET[m] = true;
+          HR_METRIC_TO_FAMILY[m] = fam;
+        });
       });
 
-      var activeBarWidths = BAR_WIDTHS_RACE1;
       var raceDataSlot = 0;
 
       var MOCK_HORSES = [
@@ -2816,6 +3604,37 @@
         return d.innerHTML;
       }
 
+      function factorHash(str) {
+        var h = 2166136261 >>> 0;
+        var i;
+        for (i = 0; i < str.length; i++) {
+          h ^= str.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0) / 4294967295;
+      }
+
+      function barWidthsForMetric(metric, count) {
+        var preset = BAR_WIDTHS_PRESET[metric];
+        var full = [];
+        var i;
+        if (preset && preset.length) {
+          full = preset.slice();
+        } else {
+          for (i = 0; i < count; i++) {
+            var v = Math.round(18 + factorHash(metric + "|bw|" + i) * 76);
+            full.push(Math.min(96, Math.max(10, v)));
+          }
+        }
+        while (full.length < count) {
+          var j = full.length;
+          full.push(
+            Math.min(96, Math.max(10, Math.round(18 + factorHash(metric + "|bw|" + j) * 76)))
+          );
+        }
+        return full.slice(0, count);
+      }
+
       function buildSpeedPickerGridHtml(seriesList, mutedExtras) {
         var h = "";
         seriesList.forEach(function (s) {
@@ -2842,10 +3661,12 @@
         return h;
       }
 
-      function renderBarComparisonRows(horses, widthsByMetric) {
+      function renderBarComparisonRows(horses) {
         var scroll = document.querySelector("#bar-chart-body .horse-scroll");
         if (!scroll) return;
-        var w = widthsByMetric["Speed figure"] || [];
+        var metricEl = document.getElementById("metric-bars");
+        var metricName = metricEl ? metricKey(metricEl.value) : "Speed figure";
+        var w = barWidthsForMetric(metricName, horses.length);
         var html = "";
         horses.forEach(function (horse, hi) {
           var pct = w[hi] != null ? w[hi] : 50;
@@ -2869,7 +3690,6 @@
         var isR2 = slot === 1;
         window.CHART_SERIES = isR2 ? window.HR_CHART_SERIES_RACE2 : window.HR_CHART_SERIES_RACE1;
         mockHorseList = isR2 ? HORSES_RACE2 : ALL_HORSES;
-        activeBarWidths = isR2 ? BAR_WIDTHS_RACE2 : BAR_WIDTHS_RACE1;
 
         var barHint = document.getElementById("bar-scroll-hint");
         if (barHint) {
@@ -2878,7 +3698,7 @@
             : "Up to 20 entries — scroll when the field is large";
         }
 
-        renderBarComparisonRows(mockHorseList, activeBarWidths);
+        renderBarComparisonRows(mockHorseList);
         hydrateBarChart();
 
         var hintEl = document.getElementById("chart-horses-hint");
@@ -2919,16 +3739,6 @@
       window.__hrApplyRaceDataSlot = applyRaceDataSlot;
 
       var HR_DEFAULT_FACTOR_FP = "aggregation:average|recency:all";
-
-      function factorHash(str) {
-        var h = 2166136261 >>> 0;
-        var i;
-        for (i = 0; i < str.length; i++) {
-          h ^= str.charCodeAt(i);
-          h = Math.imul(h, 16777619);
-        }
-        return (h >>> 0) / 4294967295;
-      }
 
       function factorFingerprintFromRoot(root) {
         if (!root) return "";
@@ -3103,7 +3913,7 @@
       }
 
       function metricKey(m) {
-        if (activeBarWidths[m]) return m;
+        if (m && HR_METRIC_NAME_SET[m]) return m;
         return "Speed figure";
       }
 
@@ -3127,15 +3937,20 @@
         );
       }
 
-      function htmlMockTable(metric, factorsRoot) {
+      function htmlMockTable(metric, factorsRoot, uid) {
         var fr = factorsRoot || document.getElementById("conditional-factors-speed");
         var fp = factorFingerprintFromRoot(fr);
+        var idPrefix =
+          uid != null && String(uid) !== ""
+            ? "cv-" + uid + "-tbl-h"
+            : "sp-viz-tbl-h";
         var cols = ["R-5", "R-4", "R-3", "R-2", "R-1", "Today"];
         var cap =
           "Sample values — " +
           metric.toLowerCase() +
           " (higher reads as “better” in this wireframe)";
         var h =
+          '<p class="mock-horse-toggle-hint">Toggle horses to include or exclude from the table.</p>' +
           '<div class="mock-wire-table-wrap"><table class="mock-wire-table"><caption>' +
           cap +
           "</caption><thead><tr><th>Horse</th>";
@@ -3144,7 +3959,23 @@
         });
         h += "</tr></thead><tbody>";
         mockHorseList.forEach(function (horse, hi) {
-          h += "<tr><td>" + horse.num + " \u00b7 " + horse.name + "</td>";
+          var hid = idPrefix + horse.num;
+          h += '<tr><td><div class="horse-meta">';
+          h +=
+            '<input type="checkbox" id="' +
+            hid +
+            '" checked aria-label="Include ' +
+            horse.num +
+            " " +
+            escapeHtml(horse.name) +
+            ' in table" />';
+          h += '<label class="horse-label" for="' + hid + '">';
+          h +=
+            '<span class="horse-num">' +
+            horse.num +
+            '</span><span class="horse-name">' +
+            escapeHtml(horse.name) +
+            "</span></label></div></td>";
           cols.forEach(function (_c, ci) {
             h += "<td>" + mockNumeric(metric, hi, ci + 1, fp) + "</td>";
           });
@@ -3154,24 +3985,51 @@
         return h;
       }
 
-      function htmlMockBars(metric, factorsRoot) {
+      function htmlMockBars(metric, factorsRoot, uid) {
         var fr = factorsRoot || document.getElementById("conditional-factors-speed");
         var fp = factorFingerprintFromRoot(fr);
-        var raw = activeBarWidths[metric] || activeBarWidths["Speed figure"];
+        var idPrefix =
+          uid != null && String(uid) !== ""
+            ? "cv-" + uid + "-bar-h"
+            : "sp-viz-bar-h";
+        var raw = barWidthsForMetric(metric, mockHorseList.length);
         var widths = applyBarFactorJitter(raw, fp);
         var h = '<div class="bar-chart-body" style="padding-top:0.35rem">';
         h += '<div class="average-label">' + metric + ' — mock scale 0–100</div>';
+        h +=
+          '<p class="mock-horse-toggle-hint">Toggle horses to include or exclude from the chart.</p>';
         h += '<div class="horse-scroll" role="list">';
         mockHorseList.forEach(function (horse, hi) {
-          var pct = widths[hi] !== undefined ? widths[hi] : Math.min(94, Math.max(18, mockNumeric(metric, hi, 99, fp)));
+          var pct =
+            widths[hi] !== undefined
+              ? widths[hi]
+              : Math.min(94, Math.max(18, mockNumeric(metric, hi, 99, fp)));
+          var hid = idPrefix + horse.num;
           h += '<div class="horse-row" role="listitem">';
           h += '<div class="horse-meta">';
-          h += '<label class="horse-label"><span class="horse-num">' + horse.num + '</span><span class="horse-name">' + horse.name + '</span></label>';
-          h += '</div>';
-          h += '<div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' + pct + '%"></div></div>';
-          h += '</div>';
+          h +=
+            '<input type="checkbox" id="' +
+            hid +
+            '" checked aria-label="Include ' +
+            horse.num +
+            " " +
+            escapeHtml(horse.name) +
+            ' in chart" />';
+          h += '<label class="horse-label" for="' + hid + '">';
+          h +=
+            '<span class="horse-num">' +
+            horse.num +
+            '</span><span class="horse-name">' +
+            escapeHtml(horse.name) +
+            "</span></label>";
+          h += "</div>";
+          h +=
+            '<div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' +
+            pct +
+            '%"></div></div>';
+          h += "</div>";
         });
-        h += '</div></div>';
+        h += "</div></div>";
         return h;
       }
 
@@ -3287,10 +4145,10 @@
         var inner;
         switch (viz) {
           case "Bar chart":
-            inner = htmlMockBars(m, fr);
+            inner = htmlMockBars(m, fr, uid);
             break;
           case "Table":
-            inner = htmlMockTable(m, fr);
+            inner = htmlMockTable(m, fr, uid);
             break;
           case "Line chart":
             inner = htmlMockMiniLine(m, uid);
@@ -3307,7 +4165,8 @@
         var body = document.getElementById("bar-chart-body");
         if (!sel || !label || !body) return;
         var m = metricKey(sel.value);
-        var widths = activeBarWidths[m];
+        var nH = body.querySelectorAll(".horse-row").length || mockHorseList.length;
+        var widths = barWidthsForMetric(m, nH);
         var facRoot = document.getElementById("conditional-factors-compare");
         var fp = factorFingerprintFromRoot(facRoot);
         var jittered = applyBarFactorJitter(widths, fp);
@@ -3348,18 +4207,351 @@
         }
       }
 
+      var metricBrowserState = {
+        catalogBuilt: false,
+        openSourceModule: null,
+      };
+
+      function hrFamilyById(fid) {
+        var i;
+        for (i = 0; i < HR_METRIC_FAMILIES.length; i++) {
+          if (HR_METRIC_FAMILIES[i].id === fid) return HR_METRIC_FAMILIES[i];
+        }
+        return null;
+      }
+
+      function loadMetricFavorites() {
+        try {
+          var j = localStorage.getItem("hrMetricFavorites");
+          return j ? JSON.parse(j) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveMetricFavorites(arr) {
+        try {
+          localStorage.setItem("hrMetricFavorites", JSON.stringify(arr.slice(0, 48)));
+        } catch (e) {}
+      }
+
+      function loadMetricRecent() {
+        try {
+          var j = localStorage.getItem("hrMetricRecent");
+          return j ? JSON.parse(j) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function pushMetricRecent(name) {
+        if (!name || !HR_METRIC_NAME_SET[name]) return;
+        var r = loadMetricRecent().filter(function (x) {
+          return x !== name;
+        });
+        r.unshift(name);
+        try {
+          localStorage.setItem("hrMetricRecent", JSON.stringify(r.slice(0, 12)));
+        } catch (e) {}
+      }
+
+      function hrCommitMetricModule(moduleEl, metricName) {
+        var input = moduleEl.querySelector(".metric-value-input");
+        if (!input) return;
+        var m = metricKey(metricName);
+        input.value = m;
+        pushMetricRecent(m);
+        hrSyncMetricModuleUI(moduleEl);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      function hrSyncMetricModuleUI(moduleEl) {
+        var input = moduleEl.querySelector(".metric-value-input");
+        if (!input) return;
+        var val = metricKey(input.value);
+        var fam = HR_METRIC_TO_FAMILY[val] || HR_METRIC_FAMILIES[0];
+        moduleEl.querySelectorAll(".metric-family-chip").forEach(function (c) {
+          var on = c.dataset.familyId === fam.id;
+          c.classList.toggle("is-active", on);
+          c.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        var lab = moduleEl.querySelector(".metric-current-label");
+        if (lab) lab.textContent = val;
+        var favBtn = moduleEl.querySelector(".metric-fav");
+        if (favBtn) {
+          var favs = loadMetricFavorites();
+          var onF = favs.indexOf(val) >= 0;
+          favBtn.classList.toggle("is-favorite", onF);
+          favBtn.setAttribute("aria-pressed", onF ? "true" : "false");
+          favBtn.textContent = onF ? "\u2605" : "\u2606";
+        }
+        var related = moduleEl.querySelector(".metric-related-row");
+        if (related) {
+          related.textContent = "";
+          if (fam.metrics.length <= 1) {
+            /* skip related strip for single-metric families */
+          } else {
+            var rl = document.createElement("span");
+            rl.className = "metric-related-label";
+            rl.textContent = "Related";
+            related.appendChild(rl);
+            var relShown = 0;
+            fam.metrics.forEach(function (rm) {
+              if (rm === val) return;
+              if (relShown >= 4) return;
+              relShown += 1;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "metric-related-chip";
+              b.textContent = rm;
+              b.title = rm;
+              b.addEventListener("click", function () {
+                hrCommitMetricModule(moduleEl, rm);
+              });
+              related.appendChild(b);
+            });
+          }
+        }
+        var prev = moduleEl.querySelector(".metric-nav--prev");
+        var next = moduleEl.querySelector(".metric-nav--next");
+        var idx = fam.metrics.indexOf(val);
+        if (idx < 0) idx = 0;
+        var single = fam.metrics.length <= 1;
+        if (prev) prev.disabled = single;
+        if (next) next.disabled = single;
+      }
+
+      function hrStepMetricModule(moduleEl, delta) {
+        var input = moduleEl.querySelector(".metric-value-input");
+        var val = metricKey(input.value);
+        var fam = HR_METRIC_TO_FAMILY[val] || HR_METRIC_FAMILIES[0];
+        var idx = fam.metrics.indexOf(val);
+        if (idx < 0) idx = 0;
+        var n = fam.metrics.length;
+        if (n <= 1) return;
+        var ni = (idx + delta + n) % n;
+        hrCommitMetricModule(moduleEl, fam.metrics[ni]);
+      }
+
+      function buildMetricBrowserCatalog() {
+        var cat = document.getElementById("metric-browser-catalog");
+        if (!cat || metricBrowserState.catalogBuilt) return;
+        metricBrowserState.catalogBuilt = true;
+        function section(title) {
+          var h = document.createElement("div");
+          h.className = "metric-browser-section-title";
+          h.textContent = title;
+          return h;
+        }
+        cat.appendChild(section("Recent"));
+        var recentWrap = document.createElement("div");
+        recentWrap.id = "metric-browser-recent";
+        cat.appendChild(recentWrap);
+        cat.appendChild(section("Favorites"));
+        var favWrap = document.createElement("div");
+        favWrap.id = "metric-browser-favorites";
+        cat.appendChild(favWrap);
+        cat.appendChild(section("All metrics by family"));
+        HR_METRIC_FAMILIES.forEach(function (fam) {
+          var gl = document.createElement("div");
+          gl.className = "metric-browser-group-label";
+          gl.textContent = fam.label;
+          cat.appendChild(gl);
+          fam.metrics.forEach(function (m) {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "metric-browser-item";
+            btn.textContent = m;
+            btn.dataset.metricName = m;
+            btn.dataset.familyId = fam.id;
+            cat.appendChild(btn);
+          });
+        });
+      }
+
+      function hrRefreshMetricBrowserAux() {
+        var recentWrap = document.getElementById("metric-browser-recent");
+        var favWrap = document.getElementById("metric-browser-favorites");
+        if (!recentWrap || !favWrap) return;
+        recentWrap.textContent = "";
+        favWrap.textContent = "";
+        var rec = loadMetricRecent().filter(function (m) {
+          return HR_METRIC_NAME_SET[m];
+        });
+        if (!rec.length) {
+          var p = document.createElement("p");
+          p.style.cssText =
+            "font-size:12px;color:var(--text-muted);margin:0.25rem 0;";
+          p.textContent = "No recent metrics yet — pick one below.";
+          recentWrap.appendChild(p);
+        } else {
+          rec.slice(0, 8).forEach(function (m) {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "metric-browser-item";
+            btn.textContent = m;
+            btn.dataset.metricName = m;
+            recentWrap.appendChild(btn);
+          });
+        }
+        var favs = loadMetricFavorites().filter(function (m) {
+          return HR_METRIC_NAME_SET[m];
+        });
+        if (!favs.length) {
+          var p2 = document.createElement("p");
+          p2.style.cssText =
+            "font-size:12px;color:var(--text-muted);margin:0.25rem 0;";
+          p2.textContent = "Star a metric from any panel to pin it here.";
+          favWrap.appendChild(p2);
+        } else {
+          favs.forEach(function (m) {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "metric-browser-item";
+            btn.textContent = m;
+            btn.dataset.metricName = m;
+            favWrap.appendChild(btn);
+          });
+        }
+      }
+
+      function hrFilterMetricBrowser(q) {
+        var ql = (q || "").trim().toLowerCase();
+        document
+          .querySelectorAll("#metric-browser-catalog .metric-browser-item")
+          .forEach(function (btn) {
+            var m = (btn.dataset.metricName || btn.textContent || "").trim();
+            var show = !ql || m.toLowerCase().indexOf(ql) >= 0;
+            btn.classList.toggle("is-hidden", !show);
+          });
+      }
+
+      function hrCloseMetricBrowser() {
+        var root = document.getElementById("metric-browser-root");
+        if (!root) return;
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        metricBrowserState.openSourceModule = null;
+      }
+
+      function hrOpenMetricBrowser(moduleEl) {
+        var root = document.getElementById("metric-browser-root");
+        if (!root) return;
+        buildMetricBrowserCatalog();
+        hrRefreshMetricBrowserAux();
+        metricBrowserState.openSourceModule = moduleEl;
+        var s = document.getElementById("metric-browser-search");
+        if (s) s.value = "";
+        hrFilterMetricBrowser("");
+        root.hidden = false;
+        root.setAttribute("aria-hidden", "false");
+        setTimeout(function () {
+          var s2 = document.getElementById("metric-browser-search");
+          if (s2) s2.focus();
+        }, 30);
+      }
+
+      function hrWireGlobalMetricBrowser() {
+        var root = document.getElementById("metric-browser-root");
+        if (!root) return;
+        var cat = document.getElementById("metric-browser-catalog");
+        var search = document.getElementById("metric-browser-search");
+        var closeBtn = document.getElementById("metric-browser-close");
+        root.addEventListener("click", function (e) {
+          if (e.target.closest("[data-metric-browser-dismiss]")) hrCloseMetricBrowser();
+        });
+        if (closeBtn) closeBtn.addEventListener("click", hrCloseMetricBrowser);
+        if (search) {
+          search.addEventListener("input", function () {
+            hrFilterMetricBrowser(search.value);
+          });
+        }
+        if (cat) {
+          cat.addEventListener("click", function (e) {
+            var btn = e.target.closest(".metric-browser-item");
+            if (!btn || !btn.dataset.metricName) return;
+            var mod = metricBrowserState.openSourceModule;
+            if (mod) hrCommitMetricModule(mod, btn.dataset.metricName);
+            hrCloseMetricBrowser();
+          });
+        }
+        var sheet = root.querySelector(".metric-browser-sheet");
+        if (sheet) {
+          sheet.addEventListener("click", function (e) {
+            e.stopPropagation();
+          });
+        }
+      }
+
+      function attachMetricModule(moduleEl) {
+        if (!moduleEl || moduleEl.dataset.hrMetricWired === "1") return;
+        moduleEl.dataset.hrMetricWired = "1";
+        var chipsHost = moduleEl.querySelector(".metric-family-chips");
+        var input = moduleEl.querySelector(".metric-value-input");
+        if (!chipsHost || !input) return;
+        HR_METRIC_FAMILIES.forEach(function (fam) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "metric-family-chip";
+          b.textContent = fam.label;
+          b.dataset.familyId = fam.id;
+          b.setAttribute("role", "tab");
+          chipsHost.appendChild(b);
+        });
+        chipsHost.querySelectorAll(".metric-family-chip").forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            var fam = hrFamilyById(chip.dataset.familyId);
+            if (!fam) return;
+            var val = metricKey(input.value);
+            var nextM = fam.metrics.indexOf(val) >= 0 ? val : fam.metrics[0];
+            hrCommitMetricModule(moduleEl, nextM);
+          });
+        });
+        var np = moduleEl.querySelector(".metric-nav--prev");
+        var nn = moduleEl.querySelector(".metric-nav--next");
+        if (np) np.addEventListener("click", function () { hrStepMetricModule(moduleEl, -1); });
+        if (nn) nn.addEventListener("click", function () { hrStepMetricModule(moduleEl, 1); });
+        var cur = moduleEl.querySelector(".metric-current");
+        if (cur) cur.addEventListener("click", function () { hrOpenMetricBrowser(moduleEl); });
+        var br = moduleEl.querySelector(".metric-browse-all");
+        if (br) br.addEventListener("click", function () { hrOpenMetricBrowser(moduleEl); });
+        var favBtn = moduleEl.querySelector(".metric-fav");
+        if (favBtn) {
+          favBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            var val = metricKey(input.value);
+            var favs = loadMetricFavorites();
+            var i = favs.indexOf(val);
+            if (i >= 0) favs.splice(i, 1);
+            else favs.unshift(val);
+            saveMetricFavorites(favs);
+            hrSyncMetricModuleUI(moduleEl);
+          });
+        }
+        input.addEventListener("change", function () {
+          var id = input.id;
+          if (id === "metric-bars") hydrateBarChart();
+          else if (id === "metric-speed") refreshSpeedPanel();
+          else if (id.indexOf("added-metric-") === 0) {
+            var w = input.closest(".dash-widget--custom");
+            if (w && typeof w.__hrMetricNotify === "function") w.__hrMetricNotify();
+          }
+        });
+        hrSyncMetricModuleUI(moduleEl);
+      }
+
       function wireCustomViewDashWidget(wrap) {
-        var mSel = wrap.querySelector('select[id^="added-metric-"]');
+        var mInput = wrap.querySelector('input.metric-value-input[id^="added-metric-"]');
         var vSel = wrap.querySelector('select[id^="added-viz-"]');
         var vis  = wrap.querySelector(".added-view-visual");
-        if (!mSel || !vSel || !vis) return;
-        var uid    = mSel.id.replace("added-metric-", "");
+        if (!mInput || !vSel || !vis) return;
+        var uid = mInput.id.replace("added-metric-", "");
         var _chart = null;
 
         function rebuild() {
           if (_chart) { try { _chart.destroy(); } catch (e) {} _chart = null; }
           var viz    = vSel.value;
-          var metric = metricKey(mSel.value);
+          var metric = metricKey(mInput.value);
           var facEl  = wrap.querySelector(".conditional-factors");
           vis.innerHTML  = buildAltVizHtml(metric, viz, uid, facEl);
           vis.style.overflow = viz === "Line chart" ? "visible" : "auto";
@@ -3369,13 +4561,10 @@
           }
         }
 
-        mSel.addEventListener("change", function () {
-          if (_chart) {
-            _chart.setMetric(metricKey(mSel.value));
-          } else {
-            rebuild();
-          }
-        });
+        wrap.__hrMetricNotify = function () {
+          if (_chart) _chart.setMetric(metricKey(mInput.value));
+          else rebuild();
+        };
         vSel.addEventListener("change", rebuild);
         rebuild();
         wrap.__hrRebuild = rebuild;
@@ -3395,8 +4584,24 @@
 
       document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape") return;
+        var mbr = document.getElementById("metric-browser-root");
+        if (mbr && !mbr.hidden) {
+          hrCloseMetricBrowser();
+          return;
+        }
         document.querySelectorAll(".factor-multi-shell.is-open").forEach(closeFactorMultiShell);
       });
+
+      var hpPage = document.getElementById("handicapping-page");
+      if (hpPage) {
+        hpPage.addEventListener("toggle", function (e) {
+          var d = e.target;
+          if (!d || !d.classList || !d.classList.contains("factors-details")) return;
+          if (!d.open) {
+            d.querySelectorAll(".factor-multi-shell.is-open").forEach(closeFactorMultiShell);
+          }
+        });
+      }
 
       var mb = document.getElementById("metric-bars");
       if (mb) {
@@ -3426,11 +4631,18 @@
       }
       applyRaceDataSlot(0);
 
+      hrWireGlobalMetricBrowser();
+      var mmc = document.getElementById("metric-module-compare");
+      var mms = document.getElementById("metric-module-speed");
+      if (mmc) attachMetricModule(mmc);
+      if (mms) attachMetricModule(mms);
+
       if (typeof window.__hrWireFactorMultiInRoot === "function") {
         var hp = document.getElementById("handicapping-page");
         window.__hrWireFactorMultiInRoot(hp || document.body);
       }
 
+      window.__hrAttachMetricModule = attachMetricModule;
       window.__wireHrCustomView = wireCustomViewDashWidget;
     })();
 
